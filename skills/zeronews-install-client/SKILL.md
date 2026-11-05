@@ -1,10 +1,10 @@
 ---
 name: zeronews-install-client
-description: Download and install the ZeroNews client on Linux, macOS, Windows, or Docker. If the client binary already exists, automatically compare version to the control plane and upgrade to latest without asking the user. After bind, default to OS service (background); request user authorization only when elevation is required, otherwise run service install/start automatically. Native installs use zeronews login unless the user gave an AuthToken; Docker still requires TOKEN.
+description: Download and install the ZeroNews client on Linux, macOS, Windows, or Docker. If the client binary already exists, automatically compare version to the control plane and upgrade to latest without asking the user. After bind, prefer OS service (background); prompt for authorization only when elevation is required, otherwise auto-run service install/start. If the platform or environment cannot use system service, fall back to foreground start automatically. Native installs use zeronews login unless the user gave an AuthToken; Docker still requires TOKEN.
 license: MIT
 metadata:
   author: zeronews
-  version: "1.3"
+  version: "1.4"
 compatibility: Requires network access to the configured client download host (currently test CDN agentv2.testenv.waitoin.com:8443 for native installs) or pull a ZeroNews Docker image. Linux/macOS/Windows native installs need a shell; Docker installs need Docker available on the host.
 ---
 
@@ -29,7 +29,7 @@ This skill covers the full first-time setup path. For auth-only changes on an al
 - detects or asks for the target platform: Linux, macOS, Windows, or Docker
 - downloads the official client or pulls the official image
 - binds the machine during install (native: `zeronews login`; Docker: `TOKEN` env)
-- **by default** starts the client as an **OS service / background** (`service install` + `service start` on native; detached container on Docker)
+- **by default** tries **OS service / background** (`service install` + `service start` on native; detached container on Docker); if system service is **not supported or fails** after auth/retry, **automatically** falls back to **foreground** `start` so the client still runs
 - verifies installation through CLI output, local API, container logs, or console guidance
 - when the client **already exists**, reads version and **automatically upgrades to latest** without asking (see [UPGRADE-ON-INSTALL.md](./references/UPGRADE-ON-INSTALL.md))
 
@@ -71,7 +71,7 @@ Ask all questions upfront before running any install command:
 
 1. **Native vs Docker** — native Linux/macOS/Windows use `zeronews login` (browser confirm) unless the user already pasted an AuthToken. **Docker still requires AuthToken first.** Do not invent, guess, or reuse a token from unrelated context.
 2. **Install method** — native Linux, native macOS, native Windows, or Docker.
-3. **Start mode** — **default: background / system service** on native (`service install` then `service start`). Use foreground `start` **only** if the user explicitly asked (e.g. 前台、调试、temporary foreground). **Do not** ask «要不要装服务» on a normal install — proceed with service automatically.
+3. **Start mode** — **default: try system service / background** on native (`service install` then `service start`). Use foreground `start` **only** if the user explicitly asked (e.g. 前台、调试). **Do not** ask «要不要装服务» on a normal install. If service is **unsupported** or **cannot be installed** (see Step 4 fallback), run **foreground `start` automatically** — do not leave the client stopped.
 4. **Optional client ID** — only if the user explicitly wants to bind a specific client ID.
 5. **Docker-only choices** when Docker is selected:
    - image registry: China mirror (`docker.zeronews.cc/zeronews/zeronews`) or Docker Hub (`zeronews/zeronews`)
@@ -191,7 +191,12 @@ For Docker volumes that already contain `config.yml`, apply the same reset-or-ig
 
 ### Step 4: Start the client
 
-**Default (native): OS service / background** — run automatically after bind (Step 3) or upgrade (Step 1b). **Do not** ask the user to confirm service install on a standard install task.
+**Default (native): try OS service first** — run automatically after bind (Step 3) or upgrade (Step 1b). **Do not** ask the user to confirm service install on a standard install task.
+
+Order of attempts:
+
+1. **System service** (`service install` + `service start`) when supported.
+2. **Foreground** `start` when service is unavailable, unsupported, or still failing after the steps below — **without** asking «改用前台吗» unless the user had explicitly forbidden service.
 
 #### Privilege / authorization (native service)
 
@@ -199,7 +204,7 @@ For Docker volumes that already contain `config.yml`, apply the same reset-or-ig
 2. If **`service install` / `service start` needs elevation** and the agent session is not root / not Administrator:
    - **Stop and ask the user once** to grant authorization (e.g. approve **sudo** in the IDE, re-run the agent in an elevated terminal, or enter admin password when the host prompts).
    - Explain in plain language: «安装系统服务需要管理员权限，请在弹窗/终端中授权后继续。」
-   - After the user confirms authorization is done (or the host shows an approval UI), **retry automatically** — do not ask again unless the command still fails with permission denied.
+   - After the user confirms authorization is done (or the host shows an approval UI), **retry service install/start automatically** — do not ask again unless the command still fails with permission denied.
 3. If already root (`id -u` is `0` on Linux/macOS) or shell is **Administrator** on Windows, run service commands **immediately without asking**.
 
 If service is **already installed** but not running → `service start` only. If running with stale config after login/upgrade → `service restart` (or `reload` if that is what configure used).
@@ -218,18 +223,36 @@ Windows (Administrator shell): `zeronews.exe service install` then `service star
 
 Platform notes: `../zeronews-configure-client/references/SERVICE-PRIVILEGES.md`, `../zeronews-configure-client/references/PRIVILEGE-EXECUTION.md`.
 
-Hand off ongoing service tweaks to `zeronews-manage-client-service` only when the user changes intent later — install skill should finish with service **up**.
+#### Fallback: foreground when service is not viable
 
-#### Native foreground (exception)
+**Do not** stop the install flow with «服务装不上». After service path fails, run foreground **`start`** and report which mode was used.
 
-Use **only** when the user explicitly requested foreground / 前台 / no service:
+Fall back to foreground **without** a second confirmation when any of these apply:
+
+| Condition | Action |
+|-----------|--------|
+| CLI/help indicates **no `service` subcommand** or OS not supported for daemon | `zeronews start` immediately |
+| `service install` / `service start` exits non-zero with **unsupported / not implemented / no systemd or launchd** (read stderr) | `zeronews start`; tell user service mode unavailable on this environment |
+| User **declined** elevation and service cannot run without it | `zeronews start`; explain client runs in foreground until they install service with admin rights |
+| Service installed but **start keeps failing** after one authorized retry | try `zeronews start` once; if that works, note foreground fallback |
+| User **explicitly** asked foreground / 前台 / no service | skip service; use foreground only |
+
+Foreground commands:
 
 ```bash
 zeronews --workdir {WORKDIR} start
 ```
 
-macOS: `cd /Applications/zeronews && ./zeronews start`  
-Windows: `.\zeronews.exe start`
+macOS: `cd /Applications/zeronews && ./zeronews --workdir {WORKDIR} start`  
+Windows: `.\zeronews.exe start` (from install dir with workdir)
+
+Tell the user briefly: service preferred when possible; **foreground keeps the client running** when service is not an option.
+
+Hand off ongoing service tweaks to `zeronews-manage-client-service` when the user later wants daemon mode.
+
+#### Native foreground (user-requested only)
+
+When the user **explicitly** requested foreground / 前台 / no service, **skip** service install and use foreground commands above only.
 
 #### Docker (default background)
 
@@ -281,12 +304,13 @@ After install succeeds:
 ## Safety rules
 
 - native installs default to `zeronews login`; Docker installs must still ask for AuthToken explicitly
-- **default native start = system service**; do not prompt «是否装服务» on normal install
-- if service commands need sudo/Administrator and the agent cannot elevate silently, **ask the user once to authorize**, then auto-retry; do not loop permission prompts
+- **default native start = try system service first**; do not prompt «是否装服务» on normal install
+- if service needs sudo/Administrator and the agent cannot elevate silently, **ask the user once to authorize**, then auto-retry service
+- if **system service is not supported or fails** after retry/declined auth, **automatically** run foreground `start` — do not leave client stopped
 - do not embed real tokens in examples, logs, or committed compose files
 - do not use unofficial mirrors, scripts, or package sources
 - do not claim UDP tunnel support
-- do not use foreground `start` unless the user explicitly asked
+- skip service and use foreground **only** when the user explicitly asked for 前台 / no service
 - do not reset or wipe an existing configured client without explicit user approval (**binary upgrade to latest is not a reset**)
 - when the client already exists on an **install** task, **never** ask whether to upgrade — run [UPGRADE-ON-INSTALL.md](./references/UPGRADE-ON-INSTALL.md) instead
 - when auth prints `Local config file already exists, token update ignored`, require an explicit reset-or-ignore choice before continuing
