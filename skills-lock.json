@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "skills": {
+    "zeronews-configure-client": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "4fa1ad44586fc4705de70c120639ba3a262a7b6223fe726700cb80695ddfec81",
+      "installMode": "copy"
+    },
+    "zeronews-expose-service": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "b6654212e15ca3efe6f0db7129d482e1785cbd50a4316526f36b3e8316be1a94",
+      "installMode": "copy"
+    },
+    "zeronews-expose-webhook": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "ce93ae704c57adc2c1913737faa61f447d7a9e4ca5650305a77637b649fdb1f3",
+      "installMode": "copy"
+    },
+    "zeronews-inspect-client": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "25a549071c71f6bdd427c01b4bd77dfcfa11f8cd72858b895108d0ae811c983c",
+      "installMode": "copy"
+    },
+    "zeronews-install-client": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "d97bd26b7bba57ef4590062061974a6c36e127a9afed9f414100c15b8ca6dbfa",
+      "installMode": "copy"
+    },
+    "zeronews-manage-account-clients": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "d9a1731513a3bc7d7d1f5aa5488fff2cc7c8fc7550e69236de63f6126da04c98",
+      "installMode": "copy"
+    },
+    "zeronews-manage-account-tunnels": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "6ba070694dd59e82ca04e0b2f8f2de3c060fc3ef63ee51f0da3f7474c00a442f",
+      "installMode": "copy"
+    },
+    "zeronews-manage-client-service": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "5c9486c1d14f9605b7eb338fb9667a0068136bab48d9b9654c66a8ec095c9965",
+      "installMode": "copy"
+    },
+    "zeronews-manage-platform-domains": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "b81f5d2fa93a911d33dbe9b948f47185c0a4a10e0de3c648a62f8435d6d8eefc",
+      "installMode": "copy"
+    },
+    "zeronews-mcp-bridge": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "0eb56ff582f25d0b6f3b3456d154beb8950a2081d44dcde7947d355a01534bc7",
+      "installMode": "copy"
+    },
+    "zeronews-reset-client": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "3a4799d5c633347f38d7da2661c29151a3912fd49f31b03e6f523b3e4fc8aa8d",
+      "installMode": "copy"
+    },
+    "zeronews-share-files": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "a5b6f75b749dd632476df30e0f7c19a8a0606d75ab1d8cf853d84f95c8b0c4e4",
+      "installMode": "copy"
+    },
+    "zeronews-upgrade-client": {
+      "source": ".",
+      "sourceType": "local",
+      "computedHash": "d9b852c7cacc04b31e75cb46550b6ec506f7bfb28ca354e164ba38336a2a94f3",
+      "installMode": "copy"
+    }
+  }
+}
