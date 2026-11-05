@@ -18,9 +18,9 @@ All `zeronews` CLI, install scripts, Docker, browser login, and local port disco
 - With MCP: run `zeronews-mcp` locally; use MCP tools instead of sandbox CLI against workdir.
 - If the agent cannot run on the user's machine, say so—do not fake install/login/expose.
 
-Full rules: [LOCAL-EXECUTION.md](../../docs/references/LOCAL-EXECUTION.md).
+Full rules: [LOCAL-EXECUTION.md](../_shared/references/LOCAL-EXECUTION.md).
 
-Operate **account-wide** tunnels via the control plane CLI. This is not the same as local `/api/v1/endpoints` — see [ACCOUNT-CLI-JSON.md](../../docs/references/ACCOUNT-CLI-JSON.md) and `zeronews-inspect-client` references.
+Operate **account-wide** tunnels via the control plane CLI. This is not the same as local `/api/v1/endpoints` — see [ACCOUNT-CLI-JSON.md](../_shared/references/ACCOUNT-CLI-JSON.md) and `zeronews-inspect-client` references.
 
 **MCP mapping**: `list_account_tunnels`, `delete_tunnel`, `enable_tunnel`, `disable_tunnel` (+ picker / `user_confirmed` delete flow).
 
@@ -29,7 +29,7 @@ Operate **account-wide** tunnels via the control plane CLI. This is not the same
 1. `zeronews --workdir {WORKDIR} status --json` → `login: true` (hand off to `zeronews-configure-client` if not).
 2. Mutations: `zeronews --workdir {WORKDIR} … --json`
 
-Shared command reference: [ACCOUNT-CLI-JSON.md](../../docs/references/ACCOUNT-CLI-JSON.md) · [CLI-JSON-PATHS.md](./references/CLI-JSON-PATHS.md) · [DELETE-CONFIRMATION.md](./references/DELETE-CONFIRMATION.md) · label hints: [PICKER-LABELS.md](./references/PICKER-LABELS.md)
+Shared command reference: [ACCOUNT-CLI-JSON.md](../_shared/references/ACCOUNT-CLI-JSON.md) · [CLI-JSON-PATHS.md](./references/CLI-JSON-PATHS.md) · [DELETE-CONFIRMATION.md](./references/DELETE-CONFIRMATION.md) · label hints: [PICKER-LABELS.md](./references/PICKER-LABELS.md)
 
 ## Workflow
 

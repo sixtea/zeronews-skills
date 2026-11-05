@@ -18,13 +18,13 @@ All `zeronews` CLI, install scripts, Docker, browser login, and local port disco
 - With MCP: run `zeronews-mcp` locally; use MCP tools instead of sandbox CLI against workdir.
 - If the agent cannot run on the user's machine, say so—do not fake install/login/expose.
 
-Full rules: [LOCAL-EXECUTION.md](../../docs/references/LOCAL-EXECUTION.md).
+Full rules: [LOCAL-EXECUTION.md](../_shared/references/LOCAL-EXECUTION.md).
 
 Account-level **domains** and **ports** (console-equivalent), via CLI `--json`.
 
 **MCP mapping**: `list_account_domains`, `add_domain`, `delete_domain`, `delete_port`.
 
-Reference: [ACCOUNT-CLI-JSON.md](../../docs/references/ACCOUNT-CLI-JSON.md) · [CLI-JSON-PATHS.md](./references/CLI-JSON-PATHS.md) · [DELETE-CONFIRMATION.md](./references/DELETE-CONFIRMATION.md) · subdomain rules: [SUBDOMAIN-PREFIX.md](./references/SUBDOMAIN-PREFIX.md)
+Reference: [ACCOUNT-CLI-JSON.md](../_shared/references/ACCOUNT-CLI-JSON.md) · [CLI-JSON-PATHS.md](./references/CLI-JSON-PATHS.md) · [DELETE-CONFIRMATION.md](./references/DELETE-CONFIRMATION.md) · subdomain rules: [SUBDOMAIN-PREFIX.md](./references/SUBDOMAIN-PREFIX.md)
 
 ## Prerequisites
 

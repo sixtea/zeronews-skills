@@ -26,6 +26,6 @@ ZeroNews 依赖 **用户电脑** 上的客户端二进制、`config.yml`、系�
 
 ## 相关
 
-- [SKILL-ROUTER.md](../SKILL-ROUTER.md)
-- [DELETE-CONFIRMATION.md](./DELETE-CONFIRMATION.md)
+- [SKILL-ROUTER.md](./SKILL-ROUTER.md)（skill 路由，同目录）
+- 删除二次确认：各 `zeronews-manage-*` skill 内 `references/DELETE-CONFIRMATION.md`
 - Agent MCP 规程：[zeronews-mcp-agent-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md)

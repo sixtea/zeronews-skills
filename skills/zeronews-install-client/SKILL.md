@@ -18,7 +18,7 @@ All `zeronews` CLI, install scripts, Docker, browser login, and local port disco
 - With MCP: run `zeronews-mcp` locally; use MCP tools instead of sandbox CLI against workdir.
 - If the agent cannot run on the user's machine, say so—do not fake install/login/expose.
 
-Full rules: [LOCAL-EXECUTION.md](../../docs/references/LOCAL-EXECUTION.md).
+Full rules: [LOCAL-EXECUTION.md](../_shared/references/LOCAL-EXECUTION.md).
 
 Install the ZeroNews client from official online sources, bind the machine (browser `zeronews login` by default, or AuthToken if the user provided one), start the runtime, and confirm the device appears online.
 

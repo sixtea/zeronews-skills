@@ -21,7 +21,7 @@ Agent 常把「我有哪些映射」和「账号里所有隧道」混为一谈�
 
 - `zeronews --workdir {WORKDIR} show tunnels --json`
 
-详见仓库 [docs/references/ACCOUNT-CLI-JSON.md](../../../docs/references/ACCOUNT-CLI-JSON.md)。
+详见 [ACCOUNT-CLI-JSON.md](../../_shared/references/ACCOUNT-CLI-JSON.md)。
 
 ## 规则
 

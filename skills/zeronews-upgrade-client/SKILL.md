@@ -18,7 +18,7 @@ All `zeronews` CLI, install scripts, Docker, browser login, and local port disco
 - With MCP: run `zeronews-mcp` locally; use MCP tools instead of sandbox CLI against workdir.
 - If the agent cannot run on the user's machine, say so—do not fake install/login/expose.
 
-Full rules: [LOCAL-EXECUTION.md](../../docs/references/LOCAL-EXECUTION.md).
+Full rules: [LOCAL-EXECUTION.md](../_shared/references/LOCAL-EXECUTION.md).
 
 Aligns with MCP **`upgrade_client`** and **`install_client`** upgrade precheck: compare version, skip if latest, **otherwise upgrade immediately**.
 
@@ -89,5 +89,5 @@ Return: client_id, versions before/after, commands run, verification result.
 ## References
 
 - Install-triggered auto upgrade: [UPGRADE-ON-INSTALL.md](../zeronews-install-client/references/UPGRADE-ON-INSTALL.md)
-- [ACCOUNT-CLI-JSON.md](../../docs/references/ACCOUNT-CLI-JSON.md)
-- [MCP-SKILLS-PARITY.md](../../docs/MCP-SKILLS-PARITY.md)
+- [ACCOUNT-CLI-JSON.md](../_shared/references/ACCOUNT-CLI-JSON.md)
+- [MCP-SKILLS-PARITY.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md)

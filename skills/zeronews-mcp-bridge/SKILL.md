@@ -18,7 +18,7 @@ All `zeronews` CLI, install scripts, Docker, browser login, and local port disco
 - With MCP: run `zeronews-mcp` locally; use MCP tools instead of sandbox CLI against workdir.
 - If the agent cannot run on the user's machine, say so—do not fake install/login/expose.
 
-Full rules: [LOCAL-EXECUTION.md](../../docs/references/LOCAL-EXECUTION.md).
+Full rules: [LOCAL-EXECUTION.md](../_shared/references/LOCAL-EXECUTION.md).
 
 Helps Agents **choose MCP vs CLI skills** without duplicating work.
 
@@ -43,7 +43,7 @@ Avoid chaining **`zeronews-install-client`** + **`zeronews-configure-client`** i
 
 ## When MCP is not available
 
-Follow [SKILL-ROUTER.md](../../docs/SKILL-ROUTER.md) and the specific `zeronews-*` skill.
+Follow [SKILL-ROUTER.md](../_shared/references/SKILL-ROUTER.md) and the specific `zeronews-*` skill.
 
 ## Auth note
 
@@ -58,4 +58,4 @@ Tunnel create/delete still needs **this machine** logged in and running for loca
 
 - npm package: **`zeronews-mcp`**
 - Agent setup: [zeronews-mcp-agent-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md)
-- Router: [SKILL-ROUTER.md](../../docs/SKILL-ROUTER.md)
+- Router: [SKILL-ROUTER.md](../_shared/references/SKILL-ROUTER.md)

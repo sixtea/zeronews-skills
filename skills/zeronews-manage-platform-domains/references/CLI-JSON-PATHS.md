@@ -28,4 +28,4 @@ If `items` is empty but `total > 0`, retry with `--page` / `--size`.
 
 Device **`id`** is the **client_id** for device subcommands.
 
-Full command table: [ACCOUNT-CLI-JSON.md](../../../docs/references/ACCOUNT-CLI-JSON.md) (repo) or bundled copy in sibling skills.
+Full command table: [ACCOUNT-CLI-JSON.md](../../_shared/references/ACCOUNT-CLI-JSON.md) (repo) or bundled copy in sibling skills.
