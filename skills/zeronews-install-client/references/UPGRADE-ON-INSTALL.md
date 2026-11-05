@@ -42,7 +42,7 @@ zeronews --workdir {WORKDIR} device download-resolve {CLIENT_ID} --json
    成功 → `service restart` 或 `reload`（若在跑）→ 再跑 `download-resolve` 确认 latest。
 
 2. **remote 失败或进程未跑 / 仅有 `download_url`**：  
-   用预检 JSON 中的 **`download_url`**；若无 CP URL，用 [INSTALL-COMMANDS.md](./INSTALL-COMMANDS.md) 当前测试 CDN（`https://agentv2.testenv.waitoin.com:8443/`）按平台覆盖二进制 → **`service restart`** 或 `start`。
+   用预检 JSON 中的 **`download_url`**；若无 CP URL，用 [INSTALL-COMMANDS.md](./INSTALL-COMMANDS.md) 中的 **Base download host** 与平台路径覆盖二进制（**直接执行，勿判断环境**）→ **`service restart`** 或 `start`。
 
 3. **仍非 latest**：再执行一次 **install script / 平台安装命令**（INSTALL-COMMANDS 中的 CDN；不 reset config），然后 restart。
 
