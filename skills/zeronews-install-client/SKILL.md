@@ -1,10 +1,10 @@
 ---
 name: zeronews-install-client
-description: Download and install the ZeroNews client on Linux, macOS, Windows, or Docker. If the client binary already exists, automatically compare version to the control plane and upgrade to latest without asking the user. After bind, prefer OS service (background); prompt for authorization only when elevation is required, otherwise auto-run service install/start. If the platform or environment cannot use system service, fall back to foreground start automatically. Native installs use zeronews login unless the user gave an AuthToken; Docker still requires TOKEN.
+description: Download and install the ZeroNews client on Linux, macOS, Windows, or Docker. If the client binary already exists, automatically compare version to the control plane and upgrade to latest without asking the user. After bind, try OS service when already root/Administrator; if service needs elevation and the session cannot elevate silently, skip service and run foreground start immediately with no user prompt. Native installs use zeronews login unless the user gave an AuthToken; Docker still requires TOKEN.
 license: MIT
 metadata:
   author: zeronews
-  version: "1.4"
+  version: "1.5"
 compatibility: Requires network access to the configured client download host (currently test CDN agentv2.testenv.waitoin.com:8443 for native installs) or pull a ZeroNews Docker image. Linux/macOS/Windows native installs need a shell; Docker installs need Docker available on the host.
 ---
 
@@ -198,28 +198,28 @@ Order of attempts:
 1. **System service** (`service install` + `service start`) when supported.
 2. **Foreground** `start` when service is unavailable, unsupported, or still failing after the steps below — **without** asking «改用前台吗» unless the user had explicitly forbidden service.
 
-#### Privilege / authorization (native service)
+#### Privilege / service vs foreground (native)
 
-1. Probe whether service is already installed: `zeronews service status` (or platform equivalent).
-2. If **`service install` / `service start` needs elevation** and the agent session is not root / not Administrator:
-   - **Stop and ask the user once** to grant authorization (e.g. approve **sudo** in the IDE, re-run the agent in an elevated terminal, or enter admin password when the host prompts).
-   - Explain in plain language: «安装系统服务需要管理员权限，请在弹窗/终端中授权后继续。」
-   - After the user confirms authorization is done (or the host shows an approval UI), **retry service install/start automatically** — do not ask again unless the command still fails with permission denied.
-3. If already root (`id -u` is `0` on Linux/macOS) or shell is **Administrator** on Windows, run service commands **immediately without asking**.
+**Never ask** the user to approve service install, sudo, or «改用前台吗» during install. **Never wait** for the user to confirm elevation.
 
-If service is **already installed** but not running → `service start` only. If running with stale config after login/upgrade → `service restart` (or `reload` if that is what configure used).
+1. If already **root** (`id -u` is `0` on Linux/macOS) or shell is **Administrator** on Windows → run `service install` + `service start` **immediately** (skip install if service already registered).
+2. If the session is **non-elevated** and `service install` / `service start` would require **interactive** sudo or admin approval (agent cannot elevate silently):
+   - **Do not** prompt for authorization.
+   - **Do not** retry with `sudo` expecting a password dialog.
+   - **Immediately** run foreground **`zeronews start`** (see commands below) and note in the report: *foreground because service requires admin and this session cannot elevate silently* (macOS **launchd** / Linux **systemd** / Windows Service Manager).
+3. If non-root but **`sudo -n`** (or equivalent) succeeds for service commands → you may run service **without asking**; if `sudo -n` fails, treat as (2) and go **straight to foreground** — no user message asking for sudo.
+
+If service is **already installed** (from a prior admin setup) but not running → try `service start` **without sudo** if CLI allows; if that needs elevation and fails silently, use foreground `start`.
+
+If service is installed and running but stale config after login/upgrade → try `service restart` when permitted without interactive elevation; otherwise foreground `start` or `reload` per configure skill.
 
 ```bash
-# non-root — after user authorized sudo
-sudo zeronews --workdir {WORKDIR} service install   # skip if already installed
-sudo zeronews --workdir {WORKDIR} service start
-
-# already root
+# elevated session only — no user prompt on install path
 zeronews --workdir {WORKDIR} service install
 zeronews --workdir {WORKDIR} service start
 ```
 
-Windows (Administrator shell): `zeronews.exe service install` then `service start` with the same workdir.
+Windows (Administrator shell only, no prompt): `zeronews.exe service install` then `service start`.
 
 Platform notes: `../zeronews-configure-client/references/SERVICE-PRIVILEGES.md`, `../zeronews-configure-client/references/PRIVILEGE-EXECUTION.md`.
 
@@ -232,10 +232,11 @@ Fall back to foreground **without** a second confirmation when any of these appl
 | Condition | Action |
 |-----------|--------|
 | CLI/help indicates **no `service` subcommand** or OS not supported for daemon | `zeronews start` immediately |
-| `service install` / `service start` exits non-zero with **unsupported / not implemented / no systemd or launchd** (read stderr) | `zeronews start`; tell user service mode unavailable on this environment |
-| User **declined** elevation and service cannot run without it | `zeronews start`; explain client runs in foreground until they install service with admin rights |
-| Service installed but **start keeps failing** after one authorized retry | try `zeronews start` once; if that works, note foreground fallback |
-| User **explicitly** asked foreground / 前台 / no service | skip service; use foreground only |
+| `service install` / `service start` exits non-zero with **unsupported / not implemented / no systemd or launchd** (read stderr) | `zeronews start`; note service unavailable |
+| **Non-elevated session** and service needs **admin / sudo** (cannot run `service install` without interactive elevation) | **`zeronews start` immediately — no ask, no confirm** |
+| `sudo -n service …` or service start fails with permission denied | **`zeronews start` immediately — no ask** |
+| Service installed but **start keeps failing** without silent fix | `zeronews start` once |
+| User **explicitly** asked foreground / 前台 / no service | skip service; foreground only |
 
 Foreground commands:
 
@@ -246,7 +247,7 @@ zeronews --workdir {WORKDIR} start
 macOS: `cd /Applications/zeronews && ./zeronews --workdir {WORKDIR} start`  
 Windows: `.\zeronews.exe start` (from install dir with workdir)
 
-Tell the user briefly: service preferred when possible; **foreground keeps the client running** when service is not an option.
+Tell the user **after** start (in the install report only): preferred service when admin is available; **foreground was used automatically** when service required elevation this session could not apply silently.
 
 Hand off ongoing service tweaks to `zeronews-manage-client-service` when the user later wants daemon mode.
 
@@ -304,9 +305,9 @@ After install succeeds:
 ## Safety rules
 
 - native installs default to `zeronews login`; Docker installs must still ask for AuthToken explicitly
-- **default native start = try system service first**; do not prompt «是否装服务» on normal install
-- if service needs sudo/Administrator and the agent cannot elevate silently, **ask the user once to authorize**, then auto-retry service
-- if **system service is not supported or fails** after retry/declined auth, **automatically** run foreground `start` — do not leave client stopped
+- **default native start = try system service only when already elevated or `sudo -n` works**; never prompt for service/sudo/前台 choice on install
+- if service needs admin and the session **cannot elevate silently**, **immediately** run foreground `start` — **no user confirmation, no authorization dialog request**
+- if **system service is not supported or fails**, **automatically** run foreground `start` — do not leave client stopped
 - do not embed real tokens in examples, logs, or committed compose files
 - do not use unofficial mirrors, scripts, or package sources
 - do not claim UDP tunnel support
