@@ -8,7 +8,7 @@ ZeroNews 依赖 **用户电脑** 上的客户端二进制、`config.yml`、系�
 |------|---------------------|
 | **Skills** | 所有 `zeronews …` CLI、安装脚本、`docker pull/run`、`service install/start`、端口发现（`ss` / `lsof` 等） |
 | **MCP** | `zeronews-mcp` 以 **用户本机 stdio** 运行；各 tool 在本机 spawn `zeronews`（与 Agent 沙箱无关） |
-| **登录** | 浏览器打开 verify URL（`open` / `xdg-open` / Windows 默认浏览器）；**不能**在沙箱里代替用户点确认 |
+| **登录** | `NO_TTY=1 login` 后 **Agent 必须** `open` / `xdg-open` / `start` 打开 verify URL（CLI 在 NO_TTY 下**不会**自启浏览器）；详见 [BROWSER-LOGIN.md](./BROWSER-LOGIN.md) |
 | **暴露** | `list_local_listeners` / `zeronews add` / 读写 `ZERONEWS_WORKDIR` |
 
 ## Agent 怎么做
@@ -26,6 +26,8 @@ ZeroNews 依赖 **用户电脑** 上的客户端二进制、`config.yml`、系�
 
 ## 相关
 
+- [BROWSER-LOGIN.md](./BROWSER-LOGIN.md)（Skills 路径 login + open + 轮询）
 - [SKILL-ROUTER.md](./SKILL-ROUTER.md)（skill 路由，同目录）
+- Skills 端到端规程：[zeronews-skills-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md)
 - 删除二次确认：各 `zeronews-manage-*` skill 内 `references/DELETE-CONFIRMATION.md`
 - Agent MCP 规程：[zeronews-mcp-agent-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md)

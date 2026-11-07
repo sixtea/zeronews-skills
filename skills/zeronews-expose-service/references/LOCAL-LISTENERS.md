@@ -25,8 +25,8 @@
 5. 将候选格式化为 **表格或编号列表**（列：地址、端口、进程、映射状态），每行一个 **label**，例如：  
    - `1) 127.0.0.1:3000 · node · 尚未映射`  
    - `2) 127.0.0.1:5432 · postgres · 已有映射 → https://…`  
-6. **有 `zeronews-mcp` 时（优先）**：`list_local_listeners` → 先表格 → **强制宿主 AskQuestion**（`ask_question.options` 或 `choices[].label`）；**禁止**在聊天里让用户手打端口。点选后用 `expose_local_service(port, local_ip)`。  
-7. **无 MCP（纯 CLI Skills）**：请用户 **点选序号或在 Questions 中选一项**（不要用开放式「请输入端口」）；确认后：  
+6. **有 `zeronews-mcp` 时（优先）**：`list_local_listeners` → **必须弹出 AskQuestion 弹窗**（`ask_question`）；表格仅辅助，**禁止**「请回复序号 1-7 / 端口号」式聊天确认。点选后 `expose_local_service(port, local_ip)`。  
+7. **无 MCP（纯 CLI Skills）**：优先 **Questions 点选**；若只能文字交互，可用序号表，但勿开放式「请输入端口」；确认后：  
    `zeronews --workdir {WORKDIR} add https --port={PORT}`（及 `--bw`、`--local_ip` 等）。
 
 ### Fallback（权限 / 平台）

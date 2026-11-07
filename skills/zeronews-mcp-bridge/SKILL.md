@@ -36,10 +36,13 @@ Do **not** assume MCP is loaded because npm exists or because another skill was 
 
 | User goal | Prefer |
 |-----------|--------|
-| Install / login / list listeners / expose / account lists | MCP tools (`install_client`, `login`, `list_local_listeners`, …) |
+| Install / login / list listeners / expose / account lists | MCP tools per [zeronews-mcp-agent-setup](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md) |
+| WorkBuddy connector | `configure_auth` (token), **not** Skills browser login |
 | Reload after config change | Host «Reload MCP» or restart MCP server |
 
-Avoid chaining **`zeronews-install-client`** + **`zeronews-configure-client`** if MCP already handles bind.
+If user follows **[zeronews-skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md)** (F-15), **do not** use MCP for install/login — use Skills + [BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md).
+
+Avoid chaining **`zeronews-install-client`** + **`zeronews-configure-client`** when MCP path already handles the same step.
 
 ## When MCP is not available
 

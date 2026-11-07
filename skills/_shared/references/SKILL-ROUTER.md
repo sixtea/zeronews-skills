@@ -20,9 +20,10 @@ npm 包名：**[`zeronews-mcp`](https://www.npmjs.com/package/zeronews-mcp)**。
 
 | 场景 | 做法 |
 |------|------|
-| **仅 Skills** | `zeronews-configure-client`：`login` 或 `authtoken`（用户已给 token） |
-| **MCP 已配置** | 用 MCP `login` / 浏览器确认；**勿**把 Auth Token 写入 `mcp.json` |
-| **两者并存** | 隧道/删资源仍须本机 login + running；绑定优先走 MCP，避免重复 authtoken 安装链 |
+| **[skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md)** | 浏览器 **`login`** + Agent **`open`** + 同 Shell 轮询（[BROWSER-LOGIN.md](./BROWSER-LOGIN.md)）；**禁止 MCP 旁路**（F-15） |
+| **仅 Skills（无 setup 规程）** | `zeronews-configure-client`：`login`（同上）或用户已给 token 时 `authtoken` |
+| **MCP / WorkBuddy 连接器** | `configure_auth`（`ZERONEWS_AUTH_TOKEN`）；**不要**用 Skills 规程里的浏览器 login 混跑 |
+| **两者并存** | 按用户选的 **一条** 规程（setup **或** mcp-agent-setup）；映射前均须本机 **login + running** |
 
 ---
 
@@ -50,9 +51,13 @@ npm 包名：**[`zeronews-mcp`](https://www.npmjs.com/package/zeronews-mcp)**。
 ## 推荐链（常见）
 
 ```text
-install-client → configure-client → manage-client-service (可选)
-                → inspect-client (门禁) → expose-service
+install-client (下载 → login+open浏览器 → poll → start → verify)
+  → 若仅补绑机: configure-client（同上 BROWSER-LOGIN）
+  → manage-client-service (可选)
+  → inspect-client (login? running?) → expose-service
 ```
+
+**映射门禁：** `login: true` **且** 客户端 **running** 后才 `expose-service`。未完成浏览器确认前 **禁止** 枚举端口建隧道。
 
 ```text
 「帮我代理本地服务」且未给端口:

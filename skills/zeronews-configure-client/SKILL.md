@@ -22,7 +22,7 @@ Full rules: [LOCAL-EXECUTION.md](../_shared/references/LOCAL-EXECUTION.md).
 
 Configure a ZeroNews client by using `zeronews login` or `zeronews authtoken` instead of editing local files manually.
 
-**MCP mapping**: `login`, `configure_auth`, `prompt_auth_token` (legacy aliases → browser login). Skills may still use `authtoken` when the user pasted a token. Do **not** put Auth Token into MCP host config.
+**MCP mapping**: **WorkBuddy / connector** → **`configure_auth`** only (`ZERONEWS_AUTH_TOKEN`). **`login`** only when **no** connector token (browser); MCP 子进程可能打不开浏览器，需用户本机打开 `verify_url`。Skills 无 MCP 时仍可用 shell `NO_TTY=1 login` 或 `authtoken`。勿把 Token 写进聊天。
 
 ## What this skill does
 
@@ -58,14 +58,14 @@ If `config.yml` already exists, ask whether the user wants to keep the current b
 
 ### Step 2: Bind
 
-Browser login (default):
+Browser login (default) — **mandatory** [BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md) / [references/BROWSER-LOGIN.md](./references/BROWSER-LOGIN.md):
 
-```bash
-NO_TTY=1 zeronews --workdir {WORKDIR} login
-zeronews --workdir {WORKDIR} status --json
-```
+1. `NO_TTY=1 zeronews --workdir {WORKDIR} login` → parse verify URL from stdout.
+2. **Same Shell:** run `open "$url"` (macOS) / `xdg-open` / Windows `start` on the **user machine** (sandbox off). CLI does **not** open the browser when `NO_TTY=1` — **Agent must**.
+3. **Same Shell:** poll `status --json` every 3s with `jq '.login == true'` until success or terminal error; continue while `login_pending`. **Do not** end the Agent turn after step 1 without steps 2–3 (setup 包 ②, F-18).
+4. After `login: true`, ensure client **running** (`service start` or `start`) before handoff to expose skills.
 
-Set `NO_TTY=1` even when a TTY exists so login returns immediately. Poll `status --json` until `login` is true. Exit `3` means wait. Do not paste the verify URL into chat if the local browser opened.
+Do not paste the verify URL into chat if the browser opened successfully on the user's machine.
 
 If the user provided a token:
 

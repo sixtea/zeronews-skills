@@ -22,6 +22,17 @@ Full rules: [LOCAL-EXECUTION.md](../_shared/references/LOCAL-EXECUTION.md).
 
 Install the ZeroNews client from official online sources, bind the machine (browser `zeronews login` by default, or AuthToken if the user provided one), start the runtime, and confirm the device appears online.
 
+## Standard pipeline (install + later expose)
+
+Aligns with [zeronews-skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md) and [SKILL-ROUTER.md](../_shared/references/SKILL-ROUTER.md):
+
+```text
+下载/安装二进制 (Step 2) → login 浏览器授权 (Step 3) → 轮询 login:true → 启动客户端 (Step 4) → 探活 (Step 5)
+→ 再 handoff zeronews-expose-service（须 login + running）
+```
+
+**Do not** map a local port before `login: true` and the client is running. **Do not** skip **open browser** after `NO_TTY=1 login` — see [BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md).
+
 This skill covers the full first-time setup path. For auth-only changes on an already-installed client, prefer `zeronews-configure-client`. For service management after install, prefer `zeronews-manage-client-service`. For health checks, prefer `zeronews-inspect-client`.
 
 ## What this skill does
@@ -108,7 +119,7 @@ When `zeronews` / `zeronews.exe` is already present and the user did **not** say
 
 For «升到最新版» as the **only** ask, you may use **`zeronews-upgrade-client`** directly; install skill still auto-upgrades when the task is **install**.
 
-**MCP mapping**: `install_client` (default download+upgrade precheck) → this skill; `login` when missing binary → install then `zeronews-configure-client` login flow.
+**MCP mapping** (only when user/host uses [MCP setup](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md), **not** [skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md)): `install_client` → `configure_auth` (Token). **Skills setup path (F-15):** do **not** use MCP for install/login; use this skill + [BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md).
 
 ### Step 1c: Not installed yet
 
@@ -141,30 +152,25 @@ If `zeronews status --json` already has `"login": true` (valid `config.yml`), sk
 
 If the user pasted an AuthToken, keep the old path: Linux `sh -s install {TOKEN}`, or `zeronews authtoken {TOKEN}` on macOS/Windows.
 
-Otherwise use browser login:
+Otherwise use browser login — **follow [BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md) end-to-end** (mandatory):
 
-```bash
-NO_TTY=1 zeronews --workdir {WORKDIR} login
-```
+1. **`NO_TTY=1 zeronews --workdir {WORKDIR} login`** — capture verify URL from stdout (CLI **will not** open the browser when `NO_TTY` is set).
+2. **Immediately run OS open** on the **user machine** (`open` / `xdg-open` / `start`) — **one Shell with login + open + poll**; do not end the turn after login alone.
+3. **Poll `status --json` in the same Shell** (3s interval, `jq '.login == true'`, handle `login_pending`; see shared doc). **Do not** split poll into separate Agent turns (setup F-18).
+4. On **`login: true`** → **Step 4 (start/service)** — never leave client stopped after install unless user chose foreground-only.
 
 Only add `--client {NAME}` when the host product name is known (for example Cursor). Do not hardcode `--client Cursor` when unknown.
 
-Stdout first line is the verify URL. Open it locally. If the browser opened, do not paste the URL into the chat. If open failed, show the URL and say it is only for the account owner — do not forward it.
+If browser open fails, guide the user to confirm in the **local** browser without forwarding the URL to untrusted channels.
 
-Then poll:
-
-```bash
-zeronews --workdir {WORKDIR} status --json
-```
-
-- exit `0` and `"login": true` → bound. Then run **Step 4 (default service start)** — do not leave the client stopped after install unless the user chose foreground-only.
-- exit `3` and `"login_pending": true` → still waiting; poll again. This is not a failure. Do not treat JSON parse success as logged in.
-- exit `1` and `"login_error"` → stop and report the error (`denied` / `expired` / `quota_exceeded` / `failed`)
-- `NO_TTY` **exists** (including `NO_TTY=0`) means non-interactive: `login` prints the URL and exits; only `status --json` writes `config.yml`.
+- exit `0` and `"login": true` → bound → Step 4.
+- exit `3` and `"login_pending": true` → still waiting; keep polling in the **same** Shell. Not a failure.
+- exit `1` and `"login_error"` → stop (`denied` / `expired` / `quota_exceeded` / `failed`)
+- `NO_TTY` means: CLI prints URL only; **Agent** opens browser + polls.
 
 Linux sudo must use the same workdir as later commands (`/etc/zeronews` is the default for the official script).
 
-Do not hand-edit `config.yml`. Do not call `zeronews authtoken` after a successful login poll.
+Do not hand-edit `config.yml`. Do not call `zeronews authtoken` after a successful login poll (unless the user originally chose token path).
 
 ### Step 3b: Handle `Local config file already exists, token update ignored`
 
