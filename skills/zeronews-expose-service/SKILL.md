@@ -22,7 +22,7 @@ Full rules: [LOCAL-EXECUTION.md](../_shared/references/LOCAL-EXECUTION.md).
 
 Create a tunnel for a **local TCP port** through the ZeroNews client (`https`, `tcp`, or `tls`).
 
-**MCP mapping**: `list_local_listeners` → Step 1 + [LOCAL-LISTENERS.md](./references/LOCAL-LISTENERS.md); `expose_local_service` → Step 0–3 with chosen port; generic `add_tunnel` (https/tcp/tls, `--bw`) → Step 3. Do not use MCP tool names with the user.
+**MCP mapping**: Step 0 gate → `list_local_listeners` only (same turn: no expose) → **table + mandatory AskQuestion** (`ask_question` / [LOCAL-LISTENERS.md](./references/LOCAL-LISTENERS.md)) → `expose_local_service(port, local_ip)`; omit port → `needs_port`. Prefer `expose_local_service` over `add_tunnel`. Do not use MCP tool names with the user.
 
 ## What this skill does
 
@@ -61,7 +61,8 @@ Only continue when login and runtime are OK.
 
 - Do **not** ask «what port?» as the first question.
 - Do **not** default to 3000, 5173, or 8080.
-- Follow [LOCAL-LISTENERS.md](./references/LOCAL-LISTENERS.md): enumerate TCP LISTEN, exclude Local API (~37271), show a **numbered list**, user picks by number or label, then continue.
+- **MCP available**: `list_local_listeners` → table + **mandatory AskQuestion**; no typed port in chat.  
+- **CLI only**: follow [LOCAL-LISTENERS.md](./references/LOCAL-LISTENERS.md): enumerate TCP LISTEN, table/numbered list, user picks via Questions or explicit selection (not open-ended port typing).
 
 ### Step 2: Pre-flight (after port is known or chosen)
 

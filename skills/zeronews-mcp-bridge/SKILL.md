@@ -47,8 +47,9 @@ Follow [SKILL-ROUTER.md](../_shared/references/SKILL-ROUTER.md) and the specific
 
 ## Auth note
 
-- MCP: browser **`login`** tool; do not instruct putting Auth Token into `mcp.json`.
-- Skills only: `zeronews-configure-client` (`login` / `authtoken`).
+- **WorkBuddy / connector MCP**: host injects **`ZERONEWS_AUTH_TOKEN`** → **`configure_auth`** (`zeronews authtoken`). Do not paste token into chat or commit `mcp.json` with real secrets.
+- **Cursor / generic MCP**: may use **`configure_auth`** when env token is set; optional browser **`login`** only when CLI supports it and no connector token.
+- **Skills only (no MCP)**: `zeronews-configure-client` (`login` / `authtoken`).
 
 ## Both present
 
