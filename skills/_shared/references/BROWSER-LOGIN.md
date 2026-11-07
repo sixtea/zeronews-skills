@@ -11,7 +11,7 @@
 | 阶段 | Skill / 动作 |
 |------|----------------|
 | 安装 | `zeronews-install-client` Step 1–2 |
-| 绑机 | Step 3 或 `zeronews-configure-client` |
+| 绑机 | **全量 install：** `zeronews-install-client` **Step 3**；**仅补绑 / 未登录：** `zeronews-configure-client` |
 | 启进程 | `zeronews-install-client` Step 4 或 `zeronews-manage-client-service` |
 | 映射 | `zeronews-expose-service`（**仅当** `login: true` 且客户端在跑） |
 

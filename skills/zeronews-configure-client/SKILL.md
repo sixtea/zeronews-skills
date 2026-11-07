@@ -1,14 +1,28 @@
 ---
 name: zeronews-configure-client
-description: Bind a ZeroNews client with `zeronews login` (browser confirm) or `zeronews authtoken` when the user already has a token. Use when asked to register, authenticate, bind, or initialize a ZeroNews client.
+description: Auth-only bind for an existing `zeronews` CLI (`login` or user-provided `authtoken`). Do not invoke after a completed skills-setup `zeronews-install-client` run that already reached `login: true`.
 license: MIT
 metadata:
   author: zeronews
-  version: "1.1"
+  version: "1.2"
 compatibility: Requires the `zeronews` CLI. The skill may work against a stopped client or a running local client runtime.
 ---
 
 # Configure Client
+
+## When to use / When not to use
+
+**Use when:**
+
+- CLI is installed; user wants **login / bind / replace token** and `login` is **false** (or user explicitly wants re-bind).
+- Handoff from expose/share/manage skills when **not** `login: true`.
+- Install did **not** complete Step 3 in the same task (interrupted, probe-only, download-only).
+
+**Do not use when:**
+
+- Same task just finished **`zeronews-install-client` 1→n** with **`login: true`** (skills-setup: no **客户端登陆** STEP).
+- `status --json` already shows **`login: true`** and the user did not ask to replace binding.
+- User wants **first-time full install** and has not run install yet → invoke **`zeronews-install-client`** (bind is install Step 3), not this skill alone.
 
 ## Local execution (mandatory)
 

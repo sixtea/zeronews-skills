@@ -29,8 +29,8 @@ MCP 安装规程：<https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md>
 
 | 目录 | 用途 |
 |------|------|
-| `zeronews-install-client` | 安装 / 已装自动升级 |
-| `zeronews-configure-client` | login / authtoken |
+| `zeronews-install-client` | 安装 + Step 3 绑机（setup 全量勿再 configure） |
+| `zeronews-configure-client` | 仅绑机 / authtoken（CLI 已在） |
 | `zeronews-expose-service` | 映射本地 HTTP/TCP/TLS |
 | `zeronews-inspect-client` | 状态、本机 endpoints |
 | `zeronews-manage-client-service` | 系统服务 |

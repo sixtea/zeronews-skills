@@ -4,7 +4,7 @@ description: Download and install the ZeroNews client on Linux, macOS, Windows, 
 license: MIT
 metadata:
   author: zeronews
-  version: "1.6"
+  version: "1.7"
 compatibility: Requires network access to the configured client download host (currently test CDN agentv2.testenv.waitoin.com:8443 for native installs) or pull a ZeroNews Docker image. Linux/macOS/Windows native installs need a shell; Docker installs need Docker available on the host.
 ---
 
@@ -34,6 +34,15 @@ Aligns with [zeronews-skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-ski
 **Do not** map a local port before `login: true` and the client is running. **Do not** skip **open browser** after `NO_TTY=1 login` — see [BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md).
 
 This skill covers the full first-time setup path. For auth-only changes on an already-installed client, prefer `zeronews-configure-client`. For service management after install, prefer `zeronews-manage-client-service`. For health checks, prefer `zeronews-inspect-client`.
+
+## skills-setup 对齐（勿叠 configure）
+
+When following [zeronews-skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md):
+
+- Invoke this skill **1→n** in **安装 ZeroNews 客户端**; browser bind is **Step 3** (same as 规程 **客户端登陆** when still `login: false` only).
+- After Step 3 reaches **`login: true`** in the same setup flow: **MUST NOT** invoke `zeronews-configure-client`; **MUST NOT** run [包 ②](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md) in a duplicate login STEP.
+- If Step 3 did not run or failed and status is still **`login: false`**: next STEP uses **`zeronews-configure-client` or 包 ②** (pick one)—do not restart install from download-only.
+- Intent **只装客户端** with **`login: true`** after this skill → DONE; no separate **客户端登陆** STEP.
 
 ## What this skill does
 
@@ -149,6 +158,8 @@ Docker auth happens through the `TOKEN` environment variable. Do not run a separ
 ### Step 3: Bind the machine (native installs only)
 
 If `zeronews status --json` already has `"login": true` (valid `config.yml`), skip this step. Do not ask for a token and do not open login again.
+
+**Agent (skills-setup):** After Step 3 succeeds in a full **1→n** run, **do not** hand off to `zeronews-configure-client`.
 
 If the user pasted an AuthToken, keep the old path: Linux `sh -s install {TOKEN}`, or `zeronews authtoken {TOKEN}` on macOS/Windows.
 

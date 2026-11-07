@@ -50,7 +50,7 @@ zeronews --workdir {WORKDIR} device download-resolve {CLIENT_ID} --json
 
 ### 4. 升级后
 
-- 继续 install skill：未 login → configure；未 running → **已 root/管理员则 service**；**否则无法静默提权则直接前台 `start`（不问用户）**（见 SKILL Step 4）
+- 继续 install skill：**本轮**若 Step 3 未执行或失败且仍 `login: false` → **`zeronews-configure-client`** 或 **续跑 install Step 3**（二选一）；**禁止** Step 3 已成功后再 configure；未 running → **已 root/管理员则 service**；**否则无法静默提权则直接前台 `start`（不问用户）**（见 SKILL Step 4）
 - 验证：`inspect-client` 或 `status --json` 中的 version
 
 ## 仍须用户选择的情况（非升级询问）

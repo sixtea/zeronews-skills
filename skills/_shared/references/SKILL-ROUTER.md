@@ -21,6 +21,7 @@ npm 包名：**[`zeronews-mcp`](https://www.npmjs.com/package/zeronews-mcp)**。
 | 场景 | 做法 |
 |------|------|
 | **[skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md)** | 浏览器 **`login`** + Agent **`open`** + 同 Shell 轮询（[BROWSER-LOGIN.md](./BROWSER-LOGIN.md)）；**禁止 MCP 旁路**（F-15） |
+| **skills-setup 全量安装** | **`zeronews-install-client` Step 3**（browser login）；**勿** 再 `configure-client` |
 | **仅 Skills（无 setup 规程）** | `zeronews-configure-client`：`login`（同上）或用户已给 token 时 `authtoken` |
 | **MCP / WorkBuddy 连接器** | `configure_auth`（`ZERONEWS_AUTH_TOKEN`）；**不要**用 Skills 规程里的浏览器 login 混跑 |
 | **两者并存** | 按用户选的 **一条** 规程（setup **或** mcp-agent-setup）；映射前均须本机 **login + running** |
@@ -32,7 +33,7 @@ npm 包名：**[`zeronews-mcp`](https://www.npmjs.com/package/zeronews-mcp)**。
 | 用户意图（示例） | Skill | 前置 / handoff |
 |------------------|-------|----------------|
 | 安装 ZeroNews / Docker 部署 | `zeronews-install-client` | — |
-| 绑定账号 / login / authtoken | `zeronews-configure-client` | 已安装 CLI；expose 前必须 **login** |
+| 绑定账号 / login / authtoken | `zeronews-configure-client` | 已安装 CLI；**setup 全量 install 1→n 时由 install Step 3 完成，勿 configure**；expose 前必须 **login** |
 | 客户端是否在跑 / 健康 / 本机 endpoints | `zeronews-inspect-client` | — |
 | 装系统服务 / 启停守护进程 | `zeronews-manage-client-service` | 通常已 configure；login 后改配置需 **restart** |
 | 映射本地 Web/端口（**未说端口**） | `zeronews-expose-service` | configure + running → **先枚举监听**（见 LOCAL-LISTENERS）；**勿**在 expose 里做 LFS |
@@ -52,7 +53,8 @@ npm 包名：**[`zeronews-mcp`](https://www.npmjs.com/package/zeronews-mcp)**。
 
 ```text
 install-client (下载 → login+open浏览器 → poll → start → verify)
-  → 若仅补绑机: configure-client（同上 BROWSER-LOGIN）
+  → 全量 install 成功后 **不要** 再 configure-client
+  → 若仅补绑机 / 未 login: configure-client（同上 BROWSER-LOGIN）
   → manage-client-service (可选)
   → inspect-client (login? running?) → expose-service
 ```
