@@ -4,7 +4,7 @@ description: Manage the ZeroNews client as a native OS service with `zeronews se
 license: MIT
 metadata:
   author: zeronews
-  version: "1.1"
+  version: "1.2"
 compatibility: Requires the `zeronews` CLI. Available behavior is platform-specific across Linux, macOS, and Windows.
 ---
 
@@ -69,10 +69,27 @@ zeronews --workdir {WORKDIR} service status
 ### Step 3: Respect OS differences
 
 - Linux uses `systemd`
-- macOS uses `launchd`
+- macOS uses `launchd` (system **LaunchDaemon** with `sudo`, or per-user **LaunchAgent** with `service --user` for Agents)
 - Windows uses the Windows Service Manager
 
 Do not paper over platform-specific privilege or file-path errors.
+
+#### macOS Agent path (`service --user`)
+
+When the session is **not root** and the user did not get a silent `sudo -n`, use **user LaunchAgent** (not `sudo service`):
+
+```bash
+WORKDIR="${WORKDIR:-$HOME/.zeronews}"
+zeronews --workdir "$WORKDIR" service --user install   # if needed
+zeronews --workdir "$WORKDIR" service --user start
+zeronews --workdir "$WORKDIR" service --user status
+zeronews --workdir "$WORKDIR" service --user stop
+zeronews --workdir "$WORKDIR" service --user restart
+```
+
+Full order and fallbacks: [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md). **Do not** document `--user` in human-facing install pages; Skills/Agent only.
+
+**Uninstall / reset on macOS (both sides):** `sudo zeronews --workdir "$WORKDIR" service uninstall` or `sudo zeronews --workdir "$WORKDIR" reset`.
 
 ### Step 4: After configure / login (cross-skill)
 

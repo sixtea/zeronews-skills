@@ -5,13 +5,15 @@ Before running any command shown here with `sudo`, check whether the current ses
 Service actions use native OS integrations and may require elevated privileges.
 
 - Linux: `systemd` under `/etc/systemd/system/zeronews-client.service`
-- macOS: `launchd` under `/Library/LaunchDaemons/com.zeronews.client.plist`
+- macOS (system): `launchd` under `/Library/LaunchDaemons/com.zeronews.client.plist` — **requires root / sudo**
+- macOS (Agent, Skills): `zeronews service --user` → `~/Library/LaunchAgents/com.zeronews.client.plist` — **no sudo** (see [MACOS-AGENT-SERVICE.md](../../zeronews-install-client/references/MACOS-AGENT-SERVICE.md))
 - Windows: native Windows Service Manager
 
 Verified guidance from code:
 
 - Linux install/start/stop/restart/uninstall require root
-- macOS install/start/stop/restart/uninstall require root
+- macOS **system** service install/start/stop/restart/uninstall require root
+- macOS **`service --user`** does not require root (Agent integration only)
 - Windows service operations require access to the Windows service manager
 
 Do not attempt service installation or removal unless the user explicitly wants service mode.

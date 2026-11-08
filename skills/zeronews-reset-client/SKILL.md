@@ -4,7 +4,7 @@ description: Reset local ZeroNews client state with `zeronews reset`. Use when t
 license: MIT
 metadata:
   author: zeronews
-  version: "1.0"
+  version: "1.1"
 compatibility: Requires the `zeronews` CLI. This is destructive. May require elevated privileges when a system service is installed.
 ---
 
@@ -75,6 +75,8 @@ sudo zeronews --workdir {WORKDIR} reset
 zeronews --workdir {WORKDIR} reset
 ```
 
+**macOS:** full reset **requires** `sudo` (uninstalls **system LaunchDaemon and user LaunchAgent**). Do **not** rely on non-elevated `zeronews reset` when any service was installed. See [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md).
+
 Windows when a service may be installed:
 
 ```powershell
@@ -83,11 +85,7 @@ Windows when a service may be installed:
 
 Run from an Administrator shell when not already elevated.
 
-When no system service was installed and the workdir is user-writable, the non-elevated command may be enough:
-
-```bash
-zeronews --workdir {WORKDIR} reset
-```
+When **only** a foreground client ran (no service, no `--user` Agent) and the workdir is user-writable, non-Linux platforms may allow non-elevated reset — **not on macOS** if LaunchAgent or LaunchDaemon was ever installed.
 
 If reset fails with:
 
