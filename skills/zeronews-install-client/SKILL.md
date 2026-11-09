@@ -1,10 +1,10 @@
 ---
 name: zeronews-install-client
-description: Download and install the ZeroNews client on Linux, macOS, Windows, or Docker. If the client binary already exists, automatically compare version to the control plane and upgrade to latest without asking the user. After bind, try OS service when already root/Administrator or when sudo -n works; on macOS non-root, use osascript with administrator privileges to run system service install and start (no service --user on the default Agent path). Native installs use zeronews login unless the user gave an AuthToken; Docker still requires TOKEN.
+description: Download and install the ZeroNews client on Linux, macOS, Windows, or Docker. If the client binary already exists, automatically compare version to the control plane and upgrade to latest without asking (binary replace only—no service restart on upgrade). System service install/start runs only after login true (Step 3 then Step 4). On macOS non-root, one osascript with administrator privileges for system service install and start (no service --user on the default Agent path). Native installs use zeronews login unless the user gave an AuthToken; Docker still requires TOKEN.
 license: MIT
 metadata:
   author: zeronews
-  version: "1.9.2"
+  version: "1.9.3"
 compatibility: Requires network access to the configured client download host (currently test CDN agentv2.testenv.waitoin.com:8443 for native installs) or pull a ZeroNews Docker image. Linux/macOS/Windows native installs need a shell; Docker installs need Docker available on the host.
 ---
 

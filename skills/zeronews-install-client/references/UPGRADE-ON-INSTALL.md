@@ -48,7 +48,10 @@ curl -sk "${CP_BASE}/client/download/latest?os=${OS}&arch=${ARCH}&current_versio
 
 ### 3. 非 latest — 自动升级（禁止询问用户）
 
-**禁止** `device upgrade`。**只**替换二进制 — **禁止** 为升级调用 `service restart` / `service stop` / `reload`（客户端换包后 **自行拉起/生效**，Agent 不要动系统服务）。
+**禁止** `device upgrade`。**只**替换二进制 — 在本节（**Step 1b 换包阶段**）**禁止** `service restart` / `service stop` / `reload`。
+
+**产品口径：** 覆盖 workdir 内客户端二进制后，运行中的进程通过客户端 **自更新 / 自拉起** 机制对齐新版本（具体行为以当前 CLI 为准）；Agent **不要** 为换包调用 launchd `restart`。  
+**登录之后**若需加载新 `config.yml`，在 **Step 3 完成之后** 用 **`reload`**（不提权）——**不属于** 本节换包阶段。
 
 1. 预检 JSON 有 **`download_url`** → **直接下载覆盖** 当前平台二进制（macOS/Windows：`curl` + `mv`；Linux：install script 或 `download_url`）。`/Applications/zeronews` 等 workdir 通常 **不需 sudo**；仅当写入失败时再对 **二进制路径** 单次提权。  
 2. 无 `download_url` → 用 INSTALL-COMMANDS 中 **Base download host** 与平台路径覆盖（**直接执行**）。  

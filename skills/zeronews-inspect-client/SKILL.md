@@ -4,7 +4,7 @@ description: Inspect a local ZeroNews client—running or not—via runtime file
 license: MIT
 metadata:
   author: zeronews
-  version: "1.1"
+  version: "1.2"
 compatibility: Works best when a local client runtime is running, but can still inspect workdir state and service state without an active runtime.
 ---
 
@@ -104,7 +104,7 @@ zeronews --workdir {WORKDIR} reload --json
 
 Or Local API `POST /api/v1/reconnect` when documented for this client version. Do not reload after every `add` — see expose-service Step 4.
 
-After **browser login** while a **service** is already running, prefer **`service restart`** via `zeronews-manage-client-service` instead of reload alone.
+After **browser login** or **install-path binary upgrade** while a daemon is **already running**, use **`reload --json`** only (unwrap, no elevation). **Do not** call `service restart` or `zeronews-manage-client-service` for login/upgrade config pickup — same rule as [zeronews-install-client](../zeronews-install-client/SKILL.md) Step 4.
 
 ## Output
 

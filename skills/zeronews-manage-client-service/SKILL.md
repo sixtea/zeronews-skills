@@ -4,7 +4,7 @@ description: Manage the ZeroNews client as a native OS service with `zeronews se
 license: MIT
 metadata:
   author: zeronews
-  version: "1.4"
+  version: "1.5"
 compatibility: Requires the `zeronews` CLI. Available behavior is platform-specific across Linux, macOS, and Windows.
 ---
 
@@ -100,7 +100,9 @@ osascript -e 'do shell script "/Applications/zeronews/zeronews --workdir /Applic
 
 ### Step 4: After configure / login (cross-skill)
 
-When **`zeronews-configure-client`** or **`zeronews-install-client`** completes browser login and a system service is **already installed and running**, run **`reload`** with unwrap first (no elevation). Use **`service restart`** via root / `sudo -n` / osascript **only if** `reload` failed or the client is not running. Skipping reload leaves expose/share flows talking to a stale process.
+**Out of scope:** **`zeronews-install-client` Step 1b** binary upgrade — no `service restart` / stop / start (see [UPGRADE-ON-INSTALL.md](../zeronews-install-client/references/UPGRADE-ON-INSTALL.md)). **Install Step 4** owns first `service install/start` after `login: true` — do not duplicate in the same task.
+
+When **`zeronews-configure-client`** or **`zeronews-install-client`** completes browser login and a system service is **already installed and running**, run **`reload`** with unwrap first (no elevation). Use **`service restart`** via root / `sudo -n` / **one** osascript **only if** `reload` failed and `status --json` is still wrong, or the client is not running. Skipping reload leaves expose/share flows talking to a stale process.
 
 If no service is installed, foreground `zeronews start` is enough.
 

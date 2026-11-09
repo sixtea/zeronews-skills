@@ -4,7 +4,7 @@ description: Expose a local HTTP/TCP/TLS port through ZeroNews with `zeronews ad
 license: MIT
 metadata:
   author: zeronews
-  version: "1.1"
+  version: "1.2"
 compatibility: Requires the `zeronews` CLI, authenticated `config.yml`, and a running local client for tunnel delivery.
 ---
 
@@ -44,9 +44,9 @@ Before asking tunnel details or running `add`:
 
 1. Run read-only checks (prefer `zeronews-inspect-client` flow): `login: true`, client **running** and Local API healthy.
 2. If not configured → hand off to `zeronews-configure-client` (do not ask which port to map yet).
-3. If configured but not running → confirm with unwrap **`status --json`** (no osascript). Hand off to `zeronews-manage-client-service` — **macOS non-root:** `sudo -n service start` or **one** osascript `service start` (or `install && start` if never installed); **do not** elevate for status/add. Foreground `start` last resort only.
+3. If configured but not running → confirm with unwrap **`status --json`** (no osascript). **Same conversation already finished `zeronews-install-client` Step 4** with success → **return to Step 3** (re-verify `status --json`; **do not** hand off `manage-client-service` for another `service start` — avoids a second macOS password). Otherwise hand off to `zeronews-manage-client-service` or complete **install Step 4** (login before service). **macOS non-root:** at most **one** osascript per task (`install && start` or `start` only). Foreground `start` last resort only.
 4. If `login_pending` or `login: false` → hand off **`zeronews-configure-client`** or complete install Step 3 ([BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md): **open browser + same-Shell poll**) before expose.
-5. If install skill ran but client not started → **`zeronews-manage-client-service`** or `zeronews start` (install Step 4).
+5. If install skill ran but client not started → finish **install Step 4** (`login: true` first); **do not** duplicate elevation via manage-client-service in the same task if Step 4 already attempted.
 
 Only continue when **`login: true`** and runtime is OK (running / connected).
 
