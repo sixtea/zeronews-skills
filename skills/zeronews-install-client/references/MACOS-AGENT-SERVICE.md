@@ -6,13 +6,24 @@
 
 ## Workdir
 
-For **non-root** sessions, prefer a user-writable workdir (same value for `login`, `service --user`, and `start`):
+**Default (Agent + install skill):** `/Applications/zeronews` — binary directory and `--workdir` are the **same path**. Use it for `login`, `status`, `service`, `service --user`, `reset`, and foreground `start`.
 
 ```bash
-WORKDIR="${WORKDIR:-$HOME/.zeronews}"
+WORKDIR="${WORKDIR:-/Applications/zeronews}"
 ```
 
-`/Applications/zeronews` is fine for the **binary**; using it as `--workdir` without write permission fails `--user` install. Align with [WORKDIRS.md](../../zeronews-configure-client/references/WORKDIRS.md).
+Preflight and all commands use this path unless the user explicitly overrides `--workdir`. Align with [WORKDIRS.md](../../zeronews-configure-client/references/WORKDIRS.md).
+
+`service --user` requires the workdir to be **writable** by the current user. Official install targets `/Applications/zeronews` (often admin-writable after install). If install reports `workdir must be writable`, fix permissions on that directory or fall through to **foreground** `start` (Step 4 tier 4) — do **not** silently pick another workdir.
+
+## User LaunchAgent: install before start (mandatory)
+
+Whenever Skills bring up the **user** service (`service --user`), run **two commands in order**:
+
+1. `zeronews --workdir "$WORKDIR" service --user install`
+2. `zeronews --workdir "$WORKDIR" service --user start`
+
+Do **not** call `service --user start` alone on first bring-up or after upgrade/reset unless `install` just succeeded in the same flow. Re-running `install` is idempotent when the plist already exists. Use `service --user restart` only when the Agent is already registered **and** the process was running.
 
 ## Start order (macOS native, install Step 4)
 
@@ -41,7 +52,7 @@ Report which tier succeeded: `system`, `user-agent`, or `foreground`.
 Fallback **without** asking:
 
 - Client too old (no `--user` flag / unknown flag error)
-- `workdir must be writable` on install
+- `workdir must be writable` on install (and user did not ask to change workdir)
 - `another zeronews client is already running` (often **system** still running) — Agent cannot `sudo service stop` silently; tell user if needed, then try foreground for this session
 - `service --user start` OK but Step 5 shows not running (no **Aqua** / headless SSH — LaunchAgent may not load)
 - Any non-zero exit after one install+start attempt

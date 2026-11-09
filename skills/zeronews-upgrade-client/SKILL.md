@@ -1,6 +1,6 @@
 ---
 name: zeronews-upgrade-client
-description: Upgrade ZeroNews to the latest version via device download-resolve and device upgrade (or binary replace from download_url). Use when the user asks to update the client, or when zeronews-install-client detects an outdated binary—then upgrade automatically without asking for confirmation.
+description: Upgrade ZeroNews when the user asks to update the client (device download-resolve + device upgrade, or binary from download_url). Install tasks use zeronews-install-client UPGRADE-ON-INSTALL (platform download/latest only, no client_id)—not this skill unless the user explicitly wants console-style device upgrade.
 license: MIT
 metadata:
   author: zeronews
@@ -30,7 +30,7 @@ Aligns with MCP **`upgrade_client`** and **`install_client`** upgrade precheck: 
 |-----------|--------|
 | No binary / first setup | `zeronews-install-client` |
 | Probe only, no download | `zeronews-install-client` probe branch — **no upgrade** |
-| Install task + binary exists | **`zeronews-install-client`** runs [UPGRADE-ON-INSTALL.md](../zeronews-install-client/references/UPGRADE-ON-INSTALL.md) (may call commands below **without asking**) |
+| Install task + binary exists | **`zeronews-install-client`** runs [UPGRADE-ON-INSTALL.md](../zeronews-install-client/references/UPGRADE-ON-INSTALL.md) — **platform latest + binary replace only** (no `client_id`); **not** this skill's `device download-resolve` chain |
 | User only says «升级» | **this skill** |
 | Reinstall after reset | `zeronews-install-client` after `zeronews-reset-client` |
 

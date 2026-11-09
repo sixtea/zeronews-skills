@@ -76,11 +76,11 @@ Do not paper over platform-specific privilege or file-path errors.
 
 #### macOS Agent path (`service --user`)
 
-When the session is **not root** and the user did not get a silent `sudo -n`, use **user LaunchAgent** (not `sudo service`):
+When the session is **not root** and the user did not get a silent `sudo -n`, use **user LaunchAgent** (not `sudo service`). **Always** `service --user install` **before** `service --user start` (same rule as install Step 4):
 
 ```bash
-WORKDIR="${WORKDIR:-$HOME/.zeronews}"
-zeronews --workdir "$WORKDIR" service --user install   # if needed
+WORKDIR="${WORKDIR:-/Applications/zeronews}"
+zeronews --workdir "$WORKDIR" service --user install
 zeronews --workdir "$WORKDIR" service --user start
 zeronews --workdir "$WORKDIR" service --user status
 zeronews --workdir "$WORKDIR" service --user stop

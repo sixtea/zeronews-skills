@@ -2,6 +2,8 @@
 
 与 MCP `install_client`（`download_install` 默认 true）一致：**发现本机已有二进制时，不要问用户「要不要升级」**，先比对版本，非 latest 则自动执行升级链。
 
+**Install 升级口径（固定）：** 只用 **本机 `zeronews --version`** + 控制面 **`/client/download/latest`**（按 os/arch/current_version）。**禁止**在安装任务里调用 `device download-resolve` / `device upgrade`（不读、不写入 `client_id`）。
+
 ## 何时执行
 
 - 用户任务属于 **安装 / 装好 ZeroNews / 部署客户端**（`zeronews-install-client`）
@@ -16,42 +18,49 @@ Docker：若容器/镜像已存在且用户要「安装」，同样 **pull 较�
 
 ```bash
 zeronews --version
-zeronews --workdir {WORKDIR} status --json   # 若可能有 config
 ```
 
-记录 `current_version`；读不到版本 → 报告 `version_unknown`，仍尝试官方安装脚本覆盖（不询问）。
+记录 `current_version`（去掉 `v` / `zeronews ` 前缀）；读不到版本 → 记 `version_unknown`，仍尝试官方安装脚本覆盖（不询问）。
 
-### 2. 预检（与 CP 对齐）
+**不要**为升级预检去解析 `status --json` 里的 `client_id`。
 
-**已 configure 且有 `client_id`**：
+### 2. 预检（平台 latest，与 CP 对齐）
+
+按本机平台拼查询（与 MCP `fetchOfficialDownloadLatest` 一致）：
+
+| OS | `os` | `arch`（`uname -m`） |
+|----|------|----------------------|
+| macOS arm64 | `darwin` | `arm64` |
+| macOS Intel | `darwin` | `amd64` |
+| Linux arm64 | `linux` | `arm64` |
+| Linux x86_64 | `linux` | `amd64` |
 
 ```bash
-zeronews --workdir {WORKDIR} device download-resolve {CLIENT_ID} --json
+# 控制面根址 = 客户端编译内嵌 user backend（或 env ZERONEWS_CONTROL_PLANE_URL / 文档 testenv）
+curl -sk "${CP_BASE}/client/download/latest?os=${OS}&arch=${ARCH}&current_version=${CURRENT_VERSION}"
 ```
 
-**未 login / 无 client_id**：用 CLI/官方 latest 信息对比 `current_version`（与 MCP `fetchOfficialDownloadLatest` 意图相同；以 `--json` 或安装文档为准）。
+解析 envelope JSON：`can_upgrade`、`must_upgrade`、`version`（目标版）、`download_url`、`checksum`。  
+当 **`can_upgrade` 与 `must_upgrade` 均为 false** 且当前版非空 → 视为 **`is_latest`** → 跳到 bind/start/verify（无需下载整包）。
 
-若 **`is_latest`** → 跳到 install skill 的 bind/start/verify（无需下载整包）。
+**未配置 CP 或 HTTP 失败**：按 [INSTALL-COMMANDS.md](./INSTALL-COMMANDS.md) 官方 CDN 覆盖安装一次（不 reset config），勿向用户确认下载域。
 
 ### 3. 非 latest — 自动升级（禁止询问用户）
 
-按顺序尝试，**直到 latest 或无法继续**：
+**禁止** `device upgrade`。**只**换二进制 + 重启进程：
 
-1. **本机 online + login**：  
-   `zeronews --workdir {WORKDIR} device upgrade {CLIENT_ID} --json`  
-   成功 → `service restart` 或 `reload`（若在跑）→ 再跑 `download-resolve` 确认 latest。
+1. 预检 JSON 有 **`download_url`** → **直接下载覆盖** 当前平台二进制（macOS/Windows 替换文件；Linux 可用 install script 或 `download_url`），权限不足时用 `sudo` 仅作用于二进制路径。  
+2. 无 `download_url` → 用 INSTALL-COMMANDS 中 **Base download host** 与平台路径覆盖（**直接执行**）。  
+3. 客户端若在跑 → **`service restart`** / **`service --user restart`**（macOS 非 root，且 LaunchAgent 已注册）/ `reload`；若未 running → 按 Step 4：**macOS 非 root 先 `service --user install` 再 `service --user start`**，否则 **`start`**。  
+4. 再读 `zeronews --version`；仍落后 → 再执行一次 **install script / 平台安装命令**（不 reset config）→ restart。
 
-2. **remote 失败或进程未跑 / 仅有 `download_url`**：  
-   用预检 JSON 中的 **`download_url`**；若无 CP URL，用 [INSTALL-COMMANDS.md](./INSTALL-COMMANDS.md) 中的 **Base download host** 与平台路径覆盖二进制（**直接执行，勿判断环境**）→ **`service restart`** 或 `start`。
-
-3. **仍非 latest**：再执行一次 **install script / 平台安装命令**（INSTALL-COMMANDS 中的 CDN；不 reset config），然后 restart。
-
-全程 **告知** 当前版 → 目标版与正在执行的动作；**不要**问「是否升级」。
+全程 **告知** 当前版 → 目标版与动作；**不要**问「是否升级」。
 
 ### 4. 升级后
 
-- 继续 install skill：**本轮**若 Step 3 未执行或失败且仍 `login: false` → **`zeronews-configure-client`** 或 **续跑 install Step 3**（二选一）；**禁止** Step 3 已成功后再 configure；未 running → 按 SKILL Step 4：**root/`sudo -n` → system service**；**macOS 非 root → `service --user` 再前台**；其他平台非 root → 前台 `start`（见 [MACOS-AGENT-SERVICE.md](./MACOS-AGENT-SERVICE.md)）
-- 验证：`inspect-client` 或 `status --json` 中的 version
+- 继续 install skill：**本轮**若 Step 3 未执行或失败且仍 `login: false` → **`zeronews-configure-client`** 或 **续跑 install Step 3**（二选一）；**禁止** Step 3 已成功后再 configure。  
+- 未 running → 按 SKILL Step 4：**root/`sudo -n` → system service**；**macOS 非 root → 先 `service --user install` 再 `service --user start`，失败再前台**（见 [MACOS-AGENT-SERVICE.md](./MACOS-AGENT-SERVICE.md)）。  
+- 验证：`zeronews --version` 或 `inspect-client` / `status --json`。
 
 ## 仍须用户选择的情况（非升级询问）
 
@@ -60,8 +69,9 @@ zeronews --workdir {WORKDIR} device download-resolve {CLIENT_ID} --json
 | authtoken conflict | reset / ignore（现有 Step 3b） |
 | 用户明确 **reset 重装** | 二次确认后 reset |
 | 用户明确 **只探测** | 不升级、不下载 |
-| 删客户端 / 删隧道 | 其他 skill |
+| 控制台「设备升级」/ 远程另一台设备 | **`zeronews-upgrade-client`**（可用 `client_id`）；**不属于 install 本 skill** |
 
 ## Handoff
 
-细粒度 `device upgrade` 步骤见 **`zeronews-upgrade-client`**（install 触发的升级 **跳过** upgrade skill 里的用户确认步骤）。
+用户单独说「升级本机/某设备」→ **`zeronews-upgrade-client`**（可走 `download-resolve` + `device upgrade`）。  
+Install 触发的自动对齐 **不得** 调用 upgrade skill 里的设备远程链，**不得**使用 `client_id`。

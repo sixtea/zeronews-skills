@@ -93,6 +93,7 @@ Silently inspect when possible:
 - whether `zeronews` / `zeronews.exe` is already installed
 - whether Docker is available (`docker version`)
 - whether an existing workdir or Docker data directory already contains `config.yml`
+- **macOS:** anchor on `/Applications/zeronews` (binary + default workdir); use `zeronews --workdir /Applications/zeronews status --json`
 
 Ask all questions upfront before running any install command:
 
@@ -113,7 +114,7 @@ Do **not** ask upfront questions that duplicate silent detection (OS, existing b
 
 When `zeronews` / `zeronews.exe` is already present and the user did **not** say probe-only / 只探测 / 不要升级 / don't download:
 
-1. Follow **[UPGRADE-ON-INSTALL.md](./references/UPGRADE-ON-INSTALL.md)** end-to-end.
+1. Follow **[UPGRADE-ON-INSTALL.md](./references/UPGRADE-ON-INSTALL.md)** end-to-end — **platform `download/latest` only**; **never** `device download-resolve` / `device upgrade` / `client_id` on install.
 2. **Do not** ask «已安装，是否跳过 / 是否要升级».
 3. After version is **latest** (or upgrade exhausted with clear error), continue with bind/start/verify below — skip redundant full download if binary is already current.
 
@@ -231,12 +232,12 @@ Order of attempts:
 
 1. If already **root** (`id -u` is `0` on Linux/macOS) or shell is **Administrator** on Windows → run `service install` + `service start` **immediately** (skip install if service already registered).
 2. If non-root but **`sudo -n`** succeeds for `service install` and `service start` → run **system** service **without asking**.
-3. **macOS only:** if non-root and step 2 did **not** run → **`zeronews --workdir {WORKDIR} service --user install`** then **`service --user start`** (use `{WORKDIR}` user-writable, default **`$HOME/.zeronews`** for Agent — see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md)).
+3. **macOS only:** if non-root and step 2 did **not** run → **`zeronews --workdir {WORKDIR} service --user install`** then **`service --user start`** (`{WORKDIR}` default **`/Applications/zeronews`** — same as binary install dir; see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md)).
 4. If step 1–3 did not leave the client **running** (permission denied, old CLI, workdir not writable, Aqua/SSH agent limits, runtime conflict with existing system service, etc.) → foreground **`zeronews --workdir {WORKDIR} start`** and note: *foreground after system / --user not viable this session*.
 
 **Linux / Windows (non-root):** when step 1–2 do not apply, go **straight to foreground** (no `--user` on those OSes).
 
-If service is **already installed** (from a prior admin setup) but not running → try `service start` **without sudo** if CLI allows; on macOS non-root try **`service --user start`** before foreground.
+If service is **already installed** (from a prior admin setup) but not running → try `service start` **without sudo** if CLI allows; on macOS non-root run **`service --user install`** then **`service --user start`** (never `start` alone — see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md)).
 
 If service is installed and running but stale config after login/upgrade → try `service restart` or **`service --user restart`** when permitted without interactive elevation; otherwise foreground `start` or `reload` per configure skill.
 
@@ -247,6 +248,13 @@ zeronews --workdir {WORKDIR} service start
 ```
 
 Windows (Administrator shell only, no prompt): `zeronews.exe service install` then `service start`.
+
+macOS non-root user LaunchAgent (no prompt):
+
+```bash
+zeronews --workdir {WORKDIR} service --user install
+zeronews --workdir {WORKDIR} service --user start
+```
 
 Platform notes: `../zeronews-configure-client/references/SERVICE-PRIVILEGES.md`, `../zeronews-configure-client/references/PRIVILEGE-EXECUTION.md`.
 
@@ -260,8 +268,8 @@ Fall back to foreground **without** a second confirmation when any of these appl
 |-----------|--------|
 | CLI/help indicates **no `service` subcommand** or OS not supported for daemon | `zeronews start` immediately |
 | `service install` / `service start` exits non-zero with **unsupported / not implemented / no systemd or launchd** (read stderr) | `zeronews start`; note service unavailable |
-| **Non-elevated session** and service needs **admin / sudo** (cannot run `service install` without interactive elevation) | **macOS:** try **`service --user`** per [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md), then `start`. **Linux/Windows:** `zeronews start` immediately |
-| `sudo -n service …` or system `service start` fails with permission denied | **macOS:** **`service --user`** then `start`; **other:** `zeronews start` — no ask |
+| **Non-elevated session** and service needs **admin / sudo** (cannot run `service install` without interactive elevation) | **macOS:** **`service --user install`** then **`service --user start`** per [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md). **Linux/Windows:** `zeronews start` immediately |
+| `sudo -n service …` or system `service start` fails with permission denied | **macOS:** **`service --user install`** then **`service --user start`**; **other:** `zeronews start` — no ask |
 | Service installed but **start keeps failing** without silent fix | `zeronews start` once |
 | User **explicitly** asked foreground / 前台 / no service | skip service; foreground only |
 
@@ -332,8 +340,8 @@ After install succeeds:
 ## Safety rules
 
 - native installs default to `zeronews login`; Docker installs must still ask for AuthToken explicitly
-- **default native start:** system when elevated or `sudo -n`; **macOS non-root:** `service --user` then foreground — see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md); never prompt for service/sudo/前台 choice on install
-- if system service needs **interactive** sudo, **do not** prompt; on **macOS** try **`service --user`** before foreground
+- **default native start:** system when elevated or `sudo -n`; **macOS non-root:** **`service --user install`** then **`service --user start`**, then foreground if needed — see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md); never prompt for service/sudo/前台 choice on install
+- if system service needs **interactive** sudo, **do not** prompt; on **macOS** run **`service --user install`** then **`service --user start`** before foreground
 - if **all background paths fail**, **automatically** run foreground `start` — do not leave client stopped
 - do not embed real tokens in examples, logs, or committed compose files
 - do not use unofficial mirrors, scripts, or package sources **other than this skill’s INSTALL-COMMANDS URLs**
