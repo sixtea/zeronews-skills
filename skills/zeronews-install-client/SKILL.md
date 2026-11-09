@@ -4,7 +4,7 @@ description: Download and install the ZeroNews client on Linux, macOS, Windows, 
 license: MIT
 metadata:
   author: zeronews
-  version: "1.9"
+  version: "1.9.1"
 compatibility: Requires network access to the configured client download host (currently test CDN agentv2.testenv.waitoin.com:8443 for native installs) or pull a ZeroNews Docker image. Linux/macOS/Windows native installs need a shell; Docker installs need Docker available on the host.
 ---
 
@@ -239,7 +239,7 @@ Order of attempts:
 
 If service is **already installed** (from a prior admin setup) but not running → try `service start` **without sudo** if CLI allows; on macOS non-root use **osascript administrator** `service start` or combined install+start per [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md).
 
-If service is installed and running but stale config after login/upgrade → try `service restart` with root / `sudo -n` / **osascript administrator** when needed; otherwise foreground `start` or `reload` per configure skill.
+If service is installed and running but stale config after login/upgrade → **`reload`** first (no elevation); only then `service restart` with root / `sudo -n` / **one** osascript if reload failed; otherwise foreground `start` per configure skill.
 
 ```bash
 # elevated session only — no user prompt on install path

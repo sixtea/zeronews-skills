@@ -2,6 +2,10 @@
 
 部分 Agent 执行 Shell 时会注入沙箱变量（常见 **`TOYBOX_SANDBOX_SOCK`**），且 **seatbelt 仍可能禁止 `launchctl` / 直接 `sudo`**。
 
+## 禁止对下列命令提权（只用 `env -u …`，不要 osascript）
+
+`login`、`status --json`、`--version`、`reload`（服务已 running 时）、升级 `curl`、`zeronews add` / expose、探活、`service --user stop|uninstall`、读取配置。**禁止** osascript 执行 `service status` — 用 `status --json`。
+
 ## macOS 持久后台（install / setup 默认）
 
 **默认路径是系统 LaunchDaemon**，不是 `service --user`。
@@ -41,10 +45,11 @@ env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBO
 
 ## Agent 必须
 
-1. **关闭 Shell 沙箱**（IDE 请求完整本机权限 / `all`），再跑 **osascript 提权** 或 `service`。
-2. **非提权命令** 带上述 `env -u …` 前缀。
-3. macOS Step 3/4 完成条件：**系统服务 running**（或 root/`sudo -n` 已起），**不是** `service --user`。
-4. 用户 **取消管理员密码** 或 osascript 失败 → 可有一次关沙箱重试；仍失败 → 给 **Terminal.app** `sudo … service install/start` 说明；**不要**仅用前台冒充「已装好」。
+1. **关闭 Shell 沙箱**（IDE 请求完整本机权限 / `all`）。
+2. **默认**：所有 CLI 仅 **`env -u …` 前缀**，不提权。
+3. **仅** macOS 系统 `service install|start|stop|restart|uninstall` 或 `reset` 在 `sudo -n` 失败时 → **一条** osascript（多命令用 `&&` 合并），每阶段至多 **一次** 密码。
+4. 完成判定：`status --json` **running**（不提权）；**不是** `service --user`。
+5. 用户 **取消密码** → 关沙箱重试一次；仍失败 → Terminal `sudo …`；**不要**前台冒充装好。
 
 ## 相关
 

@@ -4,7 +4,7 @@ description: Manage the ZeroNews client as a native OS service with `zeronews se
 license: MIT
 metadata:
   author: zeronews
-  version: "1.3"
+  version: "1.4"
 compatibility: Requires the `zeronews` CLI. Available behavior is platform-specific across Linux, macOS, and Windows.
 ---
 
@@ -46,16 +46,28 @@ Silently inspect whether the session is already elevated:
 - Linux / macOS: `id -u` → `0` means root
 - Windows: Administrator shell check per `../zeronews-configure-client/references/PRIVILEGE-EXECUTION.md`
 
-If not elevated and the action requires it on **Linux/Windows**, tell the user to rerun with `sudo` or an Administrator shell. On **macOS**, use **osascript `with administrator privileges`** for install/start/stop/restart/uninstall when `sudo -n` fails — same as install skill (user sees one administrator password dialog per elevated script).
+If not elevated and the action requires it on **Linux/Windows**, tell the user to rerun with `sudo` or an Administrator shell.
+
+On **macOS**:
+
+- **`status`:** **never** osascript — use unwrap + **`status --json`** (or `service status` only when already root).
+- **`reload`:** unwrap only when the daemon is running — **no** osascript.
+- **`install` / `start` / `stop` / `restart` / `uninstall`:** root / `sudo -n` first; else **one** osascript per request (batch subcommands with `&&`). See [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md).
 
 ### Step 2: Use the existing service commands
 
-Examples for a non-root session:
+Examples for a non-root session (health **without** sudo):
 
 ```bash
-sudo zeronews --workdir {WORKDIR} service install
-sudo zeronews --workdir {WORKDIR} service start
-zeronews --workdir {WORKDIR} service status
+env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBOX_SANDBOX_SOCK \
+  zeronews --workdir {WORKDIR} status --json
+```
+
+Elevated service control when `sudo -n` works:
+
+```bash
+sudo -n zeronews --workdir {WORKDIR} service install
+sudo -n zeronews --workdir {WORKDIR} service start
 ```
 
 If `id -u` is already `0`, omit `sudo`:
@@ -76,19 +88,19 @@ Do not paper over platform-specific privilege or file-path errors.
 
 #### macOS Agent path (system service + osascript)
 
-When the session is **not root** and `sudo -n` does not work, use **osascript administrator** wrapping **system** `zeronews service …` (same as [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)). Example start when already installed:
+When the session is **not root** and `sudo -n` does not work, use **one** osascript only for the **mutating** `service …` action (see [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)). Example start when already installed:
 
 ```bash
 osascript -e 'do shell script "/Applications/zeronews/zeronews --workdir /Applications/zeronews service start" with administrator privileges'
 ```
 
-Use unwrap + non-elevated `status --json` for health when possible. **`service --user` is not the default Agent path** — only if the user explicitly requested user LaunchAgent.
+**Do not** osascript for status. **`service --user` is not the default Agent path** — only if the user explicitly requested user LaunchAgent.
 
 **Uninstall / reset on macOS (both sides):** `sudo zeronews --workdir "$WORKDIR" service uninstall` or `sudo zeronews --workdir "$WORKDIR" reset`.
 
 ### Step 4: After configure / login (cross-skill)
 
-When **`zeronews-configure-client`** or **`zeronews-install-client`** completes browser login and a system service is **already installed and running**, run **`service restart`** (or `reload` if that is what configure used) so the daemon loads the new `config.yml`. Skipping this leaves expose/share flows talking to a stale process.
+When **`zeronews-configure-client`** or **`zeronews-install-client`** completes browser login and a system service is **already installed and running**, run **`reload`** with unwrap first (no elevation). Use **`service restart`** via root / `sudo -n` / osascript **only if** `reload` failed or the client is not running. Skipping reload leaves expose/share flows talking to a stale process.
 
 If no service is installed, foreground `zeronews start` is enough.
 

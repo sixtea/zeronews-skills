@@ -52,7 +52,7 @@ curl -sk "${CP_BASE}/client/download/latest?os=${OS}&arch=${ARCH}&current_versio
 
 1. 预检 JSON 有 **`download_url`** → **直接下载覆盖** 当前平台二进制（macOS/Windows 替换文件；Linux 可用 install script 或 `download_url`），权限不足时用 `sudo` 仅作用于二进制路径。  
 2. 无 `download_url` → 用 INSTALL-COMMANDS 中 **Base download host** 与平台路径覆盖（**直接执行**）。  
-3. 客户端若在跑 → **`service restart`**（macOS 非 root 可用 **osascript administrator** 跑 system `service restart`）/ `reload`；若未 running → 按 Step 4：**macOS 非 root 用 osascript 提权 system `service install` + `service start`**，否则 **`start`**。  
+3. 客户端若在跑 → 先 **`reload`**（不提权）；仅当 reload 无效再 **`service restart`**（macOS 非 root：`sudo -n` 或 **一次** osascript）。若未 running → 按 Step 4：**已装过** 可只 osascript `service start`；否则 **一条** osascript `install && start`。  
 4. 再读 `zeronews --version`；仍落后 → 再执行一次 **install script / 平台安装命令**（不 reset config）→ restart。
 
 全程 **告知** 当前版 → 目标版与动作；**不要**问「是否升级」。
