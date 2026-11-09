@@ -87,6 +87,8 @@ If a global Agent doc conflicts with this section on **which URL to download**, 
 
 ### Step 1: Pre-flight
 
+**macOS:** preflight `zeronews --version`, `status --json`, and CP `curl` use **only** `env -u …` + **sandbox off**. **Never** `osascript` or `with administrator privileges` for status/version (forbidden anti-pattern).
+
 Silently inspect when possible:
 
 - current OS and CPU architecture (`uname -s`, `uname -m`, or Windows environment)
@@ -346,7 +348,7 @@ After install succeeds:
 
 - native installs default to `zeronews login`; Docker installs must still ask for AuthToken explicitly
 - **default native start:** **macOS non-root → `service --user install` + `start`** (one non-admin osascript if needed); Linux/Windows system when elevated; see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md); never prompt «是否装服务» on install
-- on **macOS**, **only** `--user install` and `--user start` may use osascript — **all other commands** unwrap only
+- on **macOS**, **only** `--user install` and `--user start` may use osascript (no admin) — **all other commands** unwrap only; **never** admin osascript for `status --json`
 - if **all background paths fail** after unwrap + non-sandbox retry, you may run foreground `start` to keep debugging in-session — **do not** treat that as finished install when the user needs **system daemon** persistence (WorkBuddy)
 - do not embed real tokens in examples, logs, or committed compose files
 - do not use unofficial mirrors, scripts, or package sources **other than this skill’s INSTALL-COMMANDS URLs**

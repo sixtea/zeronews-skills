@@ -24,7 +24,15 @@ BIN="${BIN:-/Applications/zeronews/zeronews}"
 
 Includes: `login`, `status --json`, `reload`, upgrade `curl`, `zeronews add`, `service --user status`, `service --user stop|uninstall`, `--version`.
 
-**Do not** use `osascript … with administrator privileges` for Agent install/setup. **Do not** osascript for `service status` — use `status --json` or `service --user status` with unwrap.
+**Do not** use `osascript … with administrator privileges` for Agent install/setup — **including** `status --json`, `login`, `--version`, CP preflight `curl`. Those are **never** admin osascript.
+
+**Forbidden example (Agent must not run):**
+
+```text
+osascript … status --json … with administrator privileges
+```
+
+If unwrap + sandbox-off still fails `status --json`, diagnose sandbox — do **not** escalate to administrator osascript.
 
 ## Start order (macOS native, install Step 4)
 
