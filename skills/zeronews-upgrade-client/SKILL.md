@@ -67,14 +67,14 @@ zeronews --workdir {WORKDIR} device upgrade {CLIENT_ID} --json
 
 If remote upgrade fails or target offline:
 
-- Replace binary from precheck **`download_url`** per platform (see zeronews-install-client [UPGRADE-ON-INSTALL.md](../zeronews-install-client/references/UPGRADE-ON-INSTALL.md)), then **`service restart`** / `reload` / `start`.
+- Replace binary from precheck **`download_url`** per platform (see [UPGRADE-ON-INSTALL.md](../zeronews-install-client/references/UPGRADE-ON-INSTALL.md)) — **no** `service restart`; client self-handles. Then `reload` or `start` only if not running.
 
 Re-run `download-resolve` after success until latest or report failure.
 
 ### Step 3: Verify
 
 - `zeronews-inspect-client` or `status --json` for `version` and `running`
-- If service was running before upgrade → **`zeronews-manage-client-service`** restart if process still on old binary
+- **Install-path upgrade:** do not call manage-client-service restart — see UPGRADE-ON-INSTALL.md.
 
 ## Output
 

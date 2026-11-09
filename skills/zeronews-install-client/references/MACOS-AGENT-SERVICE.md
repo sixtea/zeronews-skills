@@ -41,6 +41,8 @@ Preflight and all commands use this path unless the user explicitly overrides `-
 
 ## Start order (macOS native, install Step 4)
 
+**Prerequisite:** **`login: true`** (install Step 3). **Do not** run `service install` / osascript **before** browser bind on skills-setup / first install. Step 1b binary upgrade **does not** trigger this section.
+
 Do **not** ask the user to choose service vs foreground. **Do not** block on «要不要 sudo».
 
 | Order | When | Action |

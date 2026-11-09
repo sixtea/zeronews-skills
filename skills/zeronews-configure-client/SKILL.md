@@ -93,7 +93,7 @@ If the user also provides a client ID:
 zeronews --workdir {WORKDIR} authtoken {TOKEN} {CLIENT_ID}
 ```
 
-After login writes `config.yml`: if the process is not running, `service start`; if it is already running, `service restart` or `reload`. Do not POST the granted token to the local API Configure endpoint.
+After login writes `config.yml`: if already **running**, **`reload`** only (no `service restart`). If **not running**, hand off to **`zeronews-install-client` Step 4** or **`zeronews-manage-client-service`** — do not start system service before install skill’s login gate. Do not POST the granted token to the local API Configure endpoint.
 
 ### Step 3: Handle `Local config file already exists, token update ignored`
 
@@ -136,7 +136,7 @@ Do not install or start a system service unless the user explicitly asked for it
 
 If they did, hand off to **`zeronews-manage-client-service`** after auth succeeds.
 
-If auth changed an **already running** service (browser login wrote new `config.yml`), Step 2 already covers `service restart` or `reload`—ensure the service process picks up config before expose or share workflows.
+If auth changed an **already running** daemon, Step 2 **`reload` only** — **no** `service restart` for login or binary upgrade. Ensure `status --json` is healthy before expose.
 
 ## Output
 

@@ -48,20 +48,21 @@ curl -sk "${CP_BASE}/client/download/latest?os=${OS}&arch=${ARCH}&current_versio
 
 ### 3. 非 latest — 自动升级（禁止询问用户）
 
-**禁止** `device upgrade`。**只**换二进制 + 重启进程：
+**禁止** `device upgrade`。**只**替换二进制 — **禁止** 为升级调用 `service restart` / `service stop` / `reload`（客户端换包后 **自行拉起/生效**，Agent 不要动系统服务）。
 
-1. 预检 JSON 有 **`download_url`** → **直接下载覆盖** 当前平台二进制（macOS/Windows 替换文件；Linux 可用 install script 或 `download_url`），权限不足时用 `sudo` 仅作用于二进制路径。  
+1. 预检 JSON 有 **`download_url`** → **直接下载覆盖** 当前平台二进制（macOS/Windows：`curl` + `mv`；Linux：install script 或 `download_url`）。`/Applications/zeronews` 等 workdir 通常 **不需 sudo**；仅当写入失败时再对 **二进制路径** 单次提权。  
 2. 无 `download_url` → 用 INSTALL-COMMANDS 中 **Base download host** 与平台路径覆盖（**直接执行**）。  
-3. 客户端若在跑 → 先 **`reload`**（不提权）；仅当 reload 无效再 **`service restart`**（macOS 非 root：`sudo -n` 或 **一次** osascript）。若未 running → 按 Step 4：**已装过** 可只 osascript `service start`；否则 **一条** osascript `install && start`。  
-4. 再读 `zeronews --version`；仍落后 → 再执行一次 **install script / 平台安装命令**（不 reset config）→ restart。
+3. **不要** `service restart` / `kickstart` / `manage-client-service restart`。验证：`zeronews --version`（unwrap，不提权）；可选 `status --json`（不提权）。  
+4. 仍落后 → 再执行一次官方安装/覆盖命令（不 reset config）→ 再读版本；仍 **不要** `service restart`。
 
 全程 **告知** 当前版 → 目标版与动作；**不要**问「是否升级」。
 
-### 4. 升级后
+### 4. 升级后（接 install 主流程，不提前 Step 4）
 
-- 继续 install skill：**本轮**若 Step 3 未执行或失败且仍 `login: false` → **`zeronews-configure-client`** 或 **续跑 install Step 3**（二选一）；**禁止** Step 3 已成功后再 configure。  
-- 未 running → 按 SKILL Step 4：**root/`sudo -n` → system service**；**macOS 非 root → osascript administrator 起 system 服务，失败再前台**（见 [MACOS-AGENT-SERVICE.md](./MACOS-AGENT-SERVICE.md)）。  
-- 验证：`zeronews --version` 或 `inspect-client` / `status --json`。
+- 升级结束后 **不得** 因升级单独执行 **Step 4**（系统 `service install/start`）。  
+- 顺序固定：**Step 3 `login: true` 之后** 才跑 **Step 4**（见 [SKILL.md](../SKILL.md)）。  
+- 若仍 `login: false` → 续跑 **Step 3**（或 configure）；**禁止** Step 3 已成功后再 configure。  
+- 验证：`zeronews --version`；持久 **running** 与探活在 **Step 4 完成之后** 验收。
 
 ## 仍须用户选择的情况（非升级询问）
 

@@ -4,7 +4,7 @@ description: Download and install the ZeroNews client on Linux, macOS, Windows, 
 license: MIT
 metadata:
   author: zeronews
-  version: "1.9.1"
+  version: "1.9.2"
 compatibility: Requires network access to the configured client download host (currently test CDN agentv2.testenv.waitoin.com:8443 for native installs) or pull a ZeroNews Docker image. Linux/macOS/Windows native installs need a shell; Docker installs need Docker available on the host.
 ---
 
@@ -27,7 +27,7 @@ Install the ZeroNews client from official online sources, bind the machine (brow
 Aligns with [zeronews-skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md) and [SKILL-ROUTER.md](../_shared/references/SKILL-ROUTER.md):
 
 ```text
-下载/安装二进制 (Step 2) → login 浏览器授权 (Step 3) → 轮询 login:true → 启动客户端 (Step 4) → 探活 (Step 5)
+下载/安装二进制 (Step 2) → 可选 Step 1b 换二进制（不提权、不 service restart）→ login (Step 3) → **仅 login:true 后** 系统服务 install&&start (Step 4) → 探活 (Step 5)
 → 再 handoff zeronews-expose-service（须 login + running）
 ```
 
@@ -116,7 +116,7 @@ When `zeronews` / `zeronews.exe` is already present and the user did **not** say
 
 1. Follow **[UPGRADE-ON-INSTALL.md](./references/UPGRADE-ON-INSTALL.md)** end-to-end — **platform `download/latest` only** on the **user backend** ([CONTROL-PLANE-VS-DOWNLOAD.md](./references/CONTROL-PLANE-VS-DOWNLOAD.md)); **never** call it on the INSTALL-COMMANDS CDN host; **never** `device download-resolve` / `device upgrade` / `client_id` on install.
 2. **Do not** ask «已安装，是否跳过 / 是否要升级».
-3. After version is **latest** (or upgrade exhausted with clear error), continue with bind/start/verify below — skip redundant full download if binary is already current.
+3. After version is **latest** (or upgrade exhausted with clear error), continue with **Step 3 login then Step 4** — **do not** start system service during Step 1b; upgrade does not run `service restart` (see [UPGRADE-ON-INSTALL.md](./references/UPGRADE-ON-INSTALL.md)).
 
 **Explicit exceptions** (these override auto-upgrade):
 
@@ -158,7 +158,9 @@ Docker auth happens through the `TOKEN` environment variable. Do not run a separ
 
 ### Step 3: Bind the machine (native installs only)
 
-If `zeronews status --json` already has `"login": true` (valid `config.yml`), skip this step. Do not ask for a token and do not open login again.
+**Gate for Step 4:** On a standard install / skills-setup path, **do not** run **Step 4** (`service install` / `service start` / macOS osascript) **until** this step reaches **`login: true`** (or was already logged in at preflight). Step 1b upgrade **never** substitutes for Step 4 before login.
+
+If `zeronews status --json` already has `"login": true` (valid `config.yml`), skip browser login. Do not ask for a token and do not open login again — go to **Step 4** when the client still needs a persistent daemon.
 
 **Agent (skills-setup):** After Step 3 succeeds in a full **1→n** run, **do not** hand off to `zeronews-configure-client`.
 
@@ -218,7 +220,9 @@ For Docker volumes that already contain `config.yml`, apply the same reset-or-ig
 
 ### Step 4: Start the client
 
-**Default (native): try OS service first** — run automatically after bind (Step 3) or upgrade (Step 1b). **Do not** ask the user to confirm service install on a standard install task.
+**Prerequisite:** **`login: true`** from Step 3 (or preflight). **Never** run this step before bind on a first-time skills-setup install.
+
+**Default (native): try OS service first** — run **only after** Step 3 succeeds (not after Step 1b alone). **Do not** ask the user to confirm service install on a standard install task.
 
 Order of attempts:
 
@@ -239,7 +243,7 @@ Order of attempts:
 
 If service is **already installed** (from a prior admin setup) but not running → try `service start` **without sudo** if CLI allows; on macOS non-root use **osascript administrator** `service start` or combined install+start per [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md).
 
-If service is installed and running but stale config after login/upgrade → **`reload`** first (no elevation); only then `service restart` with root / `sudo -n` / **one** osascript if reload failed; otherwise foreground `start` per configure skill.
+After **login** (Step 3), if a daemon is already **running** and needs new `config.yml` → **`reload`** only (no elevation). **Do not** `service restart` after upgrade (binary self-handles). Use `service restart` only if `reload` failed and `status --json` is still wrong — rare; prefer foreground debug over a second osascript.
 
 ```bash
 # elevated session only — no user prompt on install path
@@ -351,6 +355,7 @@ After install succeeds:
 - skip service and use foreground **only** when the user explicitly asked for 前台 / no service
 - do not reset or wipe an existing configured client without explicit user approval (**binary upgrade to latest is not a reset**)
 - when the client already exists on an **install** task, **never** ask whether to upgrade — run [UPGRADE-ON-INSTALL.md](./references/UPGRADE-ON-INSTALL.md) instead
+- **Step 4 only after `login: true`**; **Step 1b upgrade never** runs `service restart` or early Step 4
 - when auth prints `Local config file already exists, token update ignored`, require an explicit reset-or-ignore choice before continuing
 - when the user chooses reset, hand off to `zeronews-reset-client` instead of manually deleting files
 - before any command that would use `sudo`, check whether the session is already root; if `id -u` is `0`, run without `sudo`
