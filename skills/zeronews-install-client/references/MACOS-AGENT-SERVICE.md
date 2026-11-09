@@ -52,8 +52,10 @@ Report which tier succeeded: `system`, `user-agent`, or `foreground`.
 
 ## WorkBuddy: `--user` must succeed for a finished install
 
+- **`install` 可成功、`start` 失败** 是正常现象：`install` 不写 launchd；`start` 调 `launchctl bootstrap`，IDE Shell 常被拒（error 5）。仅跟 **Usage** 多半是 **start 报错后 cobra 尾注**，不是没认 `--user`（`status --user` 能跑即说明 CLI 支持）。
 - **Foreground `start` dies when the Agent chat ends** (child of the sandboxed Shell). For default install / skills-setup, **`user-agent` or system daemon** is the success mode — not foreground.
-- **`Bootstrap error 5`** on `service --user start` → retry tier 3 with [AGENT-SHELL-UNWRAP.md](../../_shared/references/AGENT-SHELL-UNWRAP.md) prefix and **non-sandbox** Shell before any foreground attempt.
+- **`Bootstrap error 5`** → 先 `env -u` 重试 `service --user start`；**4.1.1+ 客户端**会在内部用 **osascript** 再 bootstrap（WorkBuddy 内应能起用户级服务，勿让用户去 Terminal）。仍失败才给 Terminal 兜底块。
+- `install` 在 WorkBuddy 跑过后请再执行一次 `service --user install`（4.1.1+ 写入精简 PATH，去掉 brokered-bin）。
 - **Do not** advance to expose / Step 4 setup on foreground-only unless the user explicitly chose 前台 / no service.
 - After a successful `--user start`, verify **`service --user status`** → `running` and Local API health — same as Step 5.
 

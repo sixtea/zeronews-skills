@@ -1,8 +1,19 @@
 # Agent Shell unwrap（WorkBuddy / CodeBuddy / Cursor）
 
-部分 Agent 执行 Shell 时会注入沙箱变量（常见 **`TOYBOX_SANDBOX_SOCK`**），导致 **`launchctl bootstrap`** 失败（例如 **Bootstrap error 5**）。`zeronews service --user start` 依赖 launchd，**必须在非沙箱、剥离注入后**执行。
+部分 Agent 执行 Shell 时会注入沙箱变量（常见 **`TOYBOX_SANDBOX_SOCK`**），且 **seatbelt 仍可能禁止 `launchctl bootstrap`**（**Bootstrap error 5**）。
 
-前台 `zeronews start` 在沙箱剥离后往往仍可跑，但 **Agent 对话结束即进程退出**，不能替代用户级 LaunchAgent。
+| 步骤 | 是否需要 `launchctl` | WorkBuddy 内常见结果 |
+|------|----------------------|----------------------|
+| `service --user install` | 否（只写 plist） | ✅ 成功 |
+| `service --user start` | **是** | ❌ error 5；cobra 可能只跟一段 **Usage** |
+| `service --user status` | 只查询 | ✅ 可显示 not running |
+| 前台 `zeronews start` | 否 | ✅ 可跑，但关对话即停 |
+
+**`env -u TOYBOX_SANDBOX_SOCK` 不足以直接 `launchctl`**，但 **客户端 4.1.1+** 在检测到 Bootstrap error 5 时会自动用 **`osascript do shell script`** 再执行一次 `launchctl bootstrap`（无需用户打开 Terminal）。Agent 仍应在 WorkBuddy 内完整执行 `service --user install` 再 `service --user start`，并验证 `service --user status` → **running**。
+
+仅当 **直接 launchctl 与 osascript 兜底都失败** 时，才引导用户到 Terminal。
+
+前台 `zeronews start` 在 Agent 里往往仍能跑，但 **对话结束即进程退出**，不能替代 LaunchAgent。
 
 ## 每条 `zeronews` / `launchctl` 命令前缀（与 skills-setup Step 2 一致）
 
