@@ -34,22 +34,32 @@ Do **not** ask the user to choose service vs foreground. **Do not** wait for int
 | 1 | `id -u` is `0` | `zeronews --workdir "$WORKDIR" service install` then `service start` (system LaunchDaemon) |
 | 2 | Non-root and `sudo -n zeronews --workdir "$WORKDIR" service install` **and** `service start` succeed | System service (no password prompt) |
 | 3 | Non-root and silent `sudo` unavailable | `zeronews --workdir "$WORKDIR" service --user install` then `service --user start` |
-| 4 | Step 3 fails (see below) | `zeronews --workdir "$WORKDIR" start` (foreground — **last resort**) |
+| 4 | Step 3 fails after **WorkBuddy unwrap + non-sandbox retry** (see below) | Foreground **session only** — **not** install complete |
 | — | User explicitly asked 前台 / no service | Skip 1–3; only foreground |
 
-Commands for step 3:
+Commands for step 3 (WorkBuddy / sandboxed Agent Shell — **mandatory prefix** on **both** lines):
 
 ```bash
-zeronews --workdir "$WORKDIR" service --user install
-zeronews --workdir "$WORKDIR" service --user start
-zeronews --workdir "$WORKDIR" service --user status
+ZN='env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBOX_SANDBOX_SOCK'
+$ZN zeronews --workdir "$WORKDIR" service --user install
+$ZN zeronews --workdir "$WORKDIR" service --user start
+$ZN zeronews --workdir "$WORKDIR" service --user status
 ```
+
+Run with **Shell sandbox disabled**. Full details: [AGENT-SHELL-UNWRAP.md](../../_shared/references/AGENT-SHELL-UNWRAP.md).
 
 Report which tier succeeded: `system`, `user-agent`, or `foreground`.
 
+## WorkBuddy: `--user` must succeed for a finished install
+
+- **Foreground `start` dies when the Agent chat ends** (child of the sandboxed Shell). For default install / skills-setup, **`user-agent` or system daemon** is the success mode — not foreground.
+- **`Bootstrap error 5`** on `service --user start` → retry tier 3 with [AGENT-SHELL-UNWRAP.md](../../_shared/references/AGENT-SHELL-UNWRAP.md) prefix and **non-sandbox** Shell before any foreground attempt.
+- **Do not** advance to expose / Step 4 setup on foreground-only unless the user explicitly chose 前台 / no service.
+- After a successful `--user start`, verify **`service --user status`** → `running` and Local API health — same as Step 5.
+
 ## When `--user` fails → foreground
 
-Fallback **without** asking:
+Retry tier 3 with unwrap + non-sandbox **once** before foreground. Fallback **without** asking only after that:
 
 - Client too old (no `--user` flag / unknown flag error)
 - `workdir must be writable` on install (and user did not ask to change workdir)

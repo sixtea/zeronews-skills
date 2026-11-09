@@ -233,7 +233,7 @@ Order of attempts:
 1. If already **root** (`id -u` is `0` on Linux/macOS) or shell is **Administrator** on Windows → run `service install` + `service start` **immediately** (skip install if service already registered).
 2. If non-root but **`sudo -n`** succeeds for `service install` and `service start` → run **system** service **without asking**.
 3. **macOS only:** if non-root and step 2 did **not** run → **`zeronews --workdir {WORKDIR} service --user install`** then **`service --user start`** (`{WORKDIR}` default **`/Applications/zeronews`** — same as binary install dir; see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md)).
-4. If step 1–3 did not leave the client **running** (permission denied, old CLI, workdir not writable, Aqua/SSH agent limits, runtime conflict with existing system service, etc.) → foreground **`zeronews --workdir {WORKDIR} start`** and note: *foreground after system / --user not viable this session*.
+4. If step 1–3 did not leave the client **running** after **one retry** with [AGENT-SHELL-UNWRAP.md](../_shared/references/AGENT-SHELL-UNWRAP.md) + **non-sandbox** Shell (WorkBuddy `Bootstrap error 5`, etc.) → foreground **`zeronews --workdir {WORKDIR} start`** only for **this session**; **do not** mark install/setup **complete** — foreground exits when the Agent chat ends. Guide user to Terminal or non-sandbox `--user` if persistence is required.
 
 **Linux / Windows (non-root):** when step 1–2 do not apply, go **straight to foreground** (no `--user` on those OSes).
 
@@ -342,7 +342,7 @@ After install succeeds:
 - native installs default to `zeronews login`; Docker installs must still ask for AuthToken explicitly
 - **default native start:** system when elevated or `sudo -n`; **macOS non-root:** **`service --user install`** then **`service --user start`**, then foreground if needed — see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md); never prompt for service/sudo/前台 choice on install
 - if system service needs **interactive** sudo, **do not** prompt; on **macOS** run **`service --user install`** then **`service --user start`** before foreground
-- if **all background paths fail**, **automatically** run foreground `start` — do not leave client stopped
+- if **all background paths fail** after unwrap + non-sandbox retry, you may run foreground `start` to keep debugging in-session — **do not** treat that as finished install when user needs daemon/`--user` persistence (WorkBuddy)
 - do not embed real tokens in examples, logs, or committed compose files
 - do not use unofficial mirrors, scripts, or package sources **other than this skill’s INSTALL-COMMANDS URLs**
 - **do not** block or defer native download because the skill URL contains `testenv`, `localhost`, or differs from production CDN — **follow INSTALL-COMMANDS and run curl/install**

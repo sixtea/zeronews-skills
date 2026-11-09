@@ -11,6 +11,13 @@ ZeroNews 依赖 **用户电脑** 上的客户端二进制、`config.yml`、系�
 | **登录** | `NO_TTY=1 login` 后 **Agent 必须** `open` / `xdg-open` / `start` 打开 verify URL（CLI 在 NO_TTY 下**不会**自启浏览器）；详见 [BROWSER-LOGIN.md](./BROWSER-LOGIN.md) |
 | **暴露** | `list_local_listeners` / `zeronews add` / 读写 `ZERONEWS_WORKDIR` |
 
+## WorkBuddy / CodeBuddy（`TOYBOX_SANDBOX_SOCK`）
+
+`zeronews service --user start` 会调用 **`launchctl bootstrap`**。沙箱内常见 **Bootstrap error 5**；前台 `start` 可能仍能跑，但 **对话结束客户端就停**。
+
+- 所有 `zeronews`（尤其 `service --user install/start`）须 **关沙箱** + [AGENT-SHELL-UNWRAP.md](./AGENT-SHELL-UNWRAP.md) 前缀。
+- skills-setup / install **不得以仅前台** 作为 Step 3 完成条件（除非用户明确要前台）。
+
 ## Agent 怎么做
 
 1. **Cursor / IDE Shell 跑 CLI**：关闭沙箱（请求完整本机权限，例如 Cursor 的 `all` / 在用户真实终端执行）。**不要沙箱中执行，都在用户本地电脑中执行。**
