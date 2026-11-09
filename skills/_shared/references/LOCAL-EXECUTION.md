@@ -13,7 +13,7 @@ ZeroNews 依赖 **用户电脑** 上的客户端二进制、`config.yml`、系�
 
 ## WorkBuddy / CodeBuddy（`TOYBOX_SANDBOX_SOCK`）
 
-macOS 默认 **`service --user` LaunchAgent**。**仅** `service --user install` 与 `service --user start` 在沙箱拦 `launchctl` 时可用 **一条** osascript（**无** administrator privileges）；其余命令仅 `env -u …`。前台 `start` **对话结束即停**。
+macOS Step 4 顺序：**系统服务 → `--user` → 前台**（见 [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)）。仅 Tier 1/2 的 install+start 可用 osascript（Tier 1 可 admin，Tier 2 无 admin）；其余仅 `env -u …`。前台 **对话结束即停**，须提示用户**开机自启用系统服务**。
 
 - 探测类 `zeronews` 须 **关沙箱** + [AGENT-SHELL-UNWRAP.md](./AGENT-SHELL-UNWRAP.md)；提权策略见 [MACOS-AGENT-SERVICE.md](../../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)。
 - skills-setup / install **不得以仅前台** 作为 Step 3 完成条件（除非用户明确要前台）。

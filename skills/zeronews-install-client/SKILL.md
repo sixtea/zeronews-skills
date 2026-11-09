@@ -1,6 +1,6 @@
 ---
 name: zeronews-install-client
-description: Download and install the ZeroNews client on Linux, macOS, Windows, or Docker. If the client binary already exists, automatically compare version to the control plane and upgrade to latest without asking (binary replace only—no service restart on upgrade). Persistent macOS Agent start uses service --user install and start only after login true; wrap those two commands in one osascript do shell script without administrator privileges when IDE sandbox blocks launchctl. All other commands use env unwrap only. Native installs use zeronews login unless the user gave an AuthToken; Docker still requires TOKEN.
+description: Download and install the ZeroNews client on Linux, macOS, Windows, or Docker. If the client binary already exists, automatically compare version to the control plane and upgrade to latest without asking (binary replace only—no service restart on upgrade). After login true, macOS Agent Step 4 tries start order system service then user LaunchAgent then foreground; osascript only for service install+start tiers (admin once for system, non-admin for --user). All other commands use env unwrap only. Native installs use zeronews login unless the user gave an AuthToken; Docker still requires TOKEN.
 license: MIT
 metadata:
   author: zeronews
@@ -27,7 +27,7 @@ Install the ZeroNews client from official online sources, bind the machine (brow
 Aligns with [zeronews-skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md) and [SKILL-ROUTER.md](../_shared/references/SKILL-ROUTER.md):
 
 ```text
-下载/安装二进制 (Step 2) → 可选 Step 1b 换二进制（不提权、不 service restart）→ login (Step 3) → **仅 login:true 后** macOS `service --user install && start`（必要时 **一条** 无管理员 osascript）(Step 4) → 探活 (Step 5)
+下载/安装二进制 (Step 2) → 可选 Step 1b 换二进制（不提权、不 service restart）→ login (Step 3) → **仅 login:true 后** Step 4：**系统服务 → 用户服务 → 前台**（见 [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md)）→ 探活 (Step 5)
 → 再 handoff zeronews-expose-service（须 login + running）
 ```
 
@@ -226,11 +226,11 @@ For Docker volumes that already contain `config.yml`, apply the same reset-or-ig
 
 **Default (native): try OS service first** — run **only after** Step 3 succeeds (not after Step 1b alone). **Do not** ask the user to confirm service install on a standard install task.
 
-Order of attempts:
+**Start order (all native; macOS detail in [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md)):**
 
-1. **Linux/Windows / macOS root:** system `service install` + `service start` when elevated or **`sudo -n`** succeeds.
-2. **macOS non-root (default):** **`service --user install`** then **`service --user start`** — unwrap first; if Bootstrap error 5 / sandbox, **one** osascript **without** `administrator privileges` running both (see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md)). **No osascript for any other command.**
-3. **Foreground** `start` when (1)(2) fail after retry — without asking unless user forbade background.
+1. **System service** — `service install` + `service start` (root, `sudo -n`, or macOS **one** admin osascript batch).
+2. **User service (macOS)** — **`service --user install`** + **`service --user start`** — unwrap; **one** non-admin osascript if Bootstrap error 5.
+3. **Foreground** `start` only after (1)(2) each failed after unwrap + non-sandbox retry — **must** deliver the **开机自启 → 系统服务** user message from MACOS-AGENT-SERVICE Tier 3.
 
 #### Privilege / service vs foreground (native)
 
@@ -238,8 +238,8 @@ Order of attempts:
 
 1. If already **root** (`id -u` is `0` on Linux/macOS) or shell is **Administrator** on Windows → run `service install` + `service start` **immediately** (skip install if service already registered).
 2. If non-root but **`sudo -n`** succeeds for `service install` and `service start` → run **system** service **without asking**.
-3. **macOS non-root:** **`service --user install`** + **`service --user start`** via [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md) Tier 3 (at most **one** non-admin osascript for both).
-4. If step 1–3 did not leave the client **running** after **one retry** with [AGENT-SHELL-UNWRAP.md](../_shared/references/AGENT-SHELL-UNWRAP.md) + **non-sandbox** Shell → foreground **`zeronews --workdir {WORKDIR} start`** only for **this session**; **do not** mark install/setup **complete** — foreground exits when the Agent chat ends. Guide user to **Terminal.app** `sudo … service install/start` if persistence is required.
+3. **macOS non-root:** Tier 1 system via [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md); then Tier 2 **`service --user`** if Tier 1 failed.
+4. If Tiers 1–2 did not leave the client **running** after retry → Tier 3 foreground **`zeronews --workdir {WORKDIR} start`**; **do not** mark install/setup **complete** on skills-setup; **must** prompt user that **开机自启** needs **系统服务** (`sudo … service install/start` in Terminal).
 
 **Linux / Windows (non-root):** when step 1–2 do not apply, go **straight to foreground** (no `--user` on those OSes).
 
@@ -255,13 +255,7 @@ zeronews --workdir {WORKDIR} service start
 
 Windows (Administrator shell only, no prompt): `zeronews.exe service install` then `service start`.
 
-macOS non-root — **`service --user`** (one osascript if needed; **no** administrator password):
-
-```bash
-osascript <<'APPLESCRIPT'
-do shell script "/bin/bash -lc '/Applications/zeronews/zeronews --workdir /Applications/zeronews service --user install && /Applications/zeronews/zeronews --workdir /Applications/zeronews service --user start'"
-APPLESCRIPT
-```
+macOS — full tiers in [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md) (system admin osascript → `--user` non-admin osascript → foreground + user prompt).
 
 Platform notes: `../zeronews-configure-client/references/SERVICE-PRIVILEGES.md`, `../zeronews-configure-client/references/PRIVILEGE-EXECUTION.md`.
 
@@ -275,8 +269,8 @@ Fall back to foreground **without** a second confirmation when any of these appl
 |-----------|--------|
 | CLI/help indicates **no `service` subcommand** or OS not supported for daemon | `zeronews start` immediately |
 | `service install` / `service start` exits non-zero with **unsupported / not implemented / no systemd or launchd** (read stderr) | `zeronews start`; note service unavailable |
-| **Non-elevated macOS** | **`service --user install` + `start`** (osascript once if needed) per [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md). **Linux/Windows:** `zeronews start` or `sudo service` |
-| `--user start` fails after osascript retry | Foreground `start` — no ask |
+| **Non-elevated macOS** | Tier 1 **system** then Tier 2 **`--user`** per [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md). **Linux/Windows:** system/`sudo` then foreground |
+| Tier 2 `--user start` fails after osascript retry | Tier 3 foreground + **系统服务** prompt — no ask |
 | Service installed but **start keeps failing** without silent fix | `zeronews start` once |
 | User **explicitly** asked foreground / 前台 / no service | skip service; foreground only |
 
@@ -289,7 +283,7 @@ zeronews --workdir {WORKDIR} start
 macOS: `cd /Applications/zeronews && ./zeronews --workdir {WORKDIR} start`  
 Windows: `.\zeronews.exe start` (from install dir with workdir)
 
-Tell the user **after** start: **user-agent (`--user`)** on macOS non-root; **system** when elevated; **foreground** only as last resort.
+Tell the user **after** start which tier succeeded: **`system`**, **`user-agent`**, or **`foreground`**. On **foreground**, include the **开机自启 / 系统服务** message from [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md).
 
 Hand off ongoing service tweaks to `zeronews-manage-client-service` when the user later wants daemon mode.
 
@@ -347,9 +341,9 @@ After install succeeds:
 ## Safety rules
 
 - native installs default to `zeronews login`; Docker installs must still ask for AuthToken explicitly
-- **default native start:** **macOS non-root → `service --user install` + `start`** (one non-admin osascript if needed); Linux/Windows system when elevated; see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md); never prompt «是否装服务» on install
-- on **macOS**, **only** `--user install` and `--user start` may use osascript (no admin) — **all other commands** unwrap only; **never** admin osascript for `status --json`
-- if **all background paths fail** after unwrap + non-sandbox retry, you may run foreground `start` to keep debugging in-session — **do not** treat that as finished install when the user needs **system daemon** persistence (WorkBuddy)
+- **default native start order:** **system → `--user` → foreground**; see [MACOS-AGENT-SERVICE.md](./references/MACOS-AGENT-SERVICE.md); never prompt «是否装服务» on install
+- on **macOS**, osascript **only** for Tier 1 system install+start (admin, once) or Tier 2 `--user` install+start (no admin) — **never** admin osascript for `status --json`
+- **foreground (Tier 3):** always tell user **开机自启请用系统服务**; do not treat skills-setup Step 3 as complete
 - do not embed real tokens in examples, logs, or committed compose files
 - do not use unofficial mirrors, scripts, or package sources **other than this skill’s INSTALL-COMMANDS URLs**
 - **do not** block or defer native download because the skill URL contains `testenv`, `localhost`, or differs from production CDN — **follow INSTALL-COMMANDS and run curl/install**

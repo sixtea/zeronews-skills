@@ -20,21 +20,18 @@ env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBO
   /Applications/zeronews/zeronews --workdir /Applications/zeronews status --json
 ```
 
-## macOS 持久后台（install / setup 默认：`service --user`）
+## macOS Step 4 启动顺序（强制）
 
-| 步骤 | Agent 做法 |
-|------|------------|
-| 多数 CLI | **关沙箱** + `env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBOX_SANDBOX_SOCK` |
-| **仅** Step 4：`service --user install` **且** `service --user start` | 先试 unwrap 直连；失败则 **一条** `osascript` `do shell script`（**无** administrator privileges），两条命令 `&&` 合并 |
-| 完成判定 | `service --user status` + `status --json` → **running** |
+**系统服务 → 用户服务（`--user`）→ 前台**。禁止跳步直接 `launchctl`。**禁止**用前台冒充 setup 完成。
 
-```bash
-osascript <<'APPLESCRIPT'
-do shell script "/bin/bash -lc '/Applications/zeronews/zeronews --workdir /Applications/zeronews service --user install && /Applications/zeronews/zeronews --workdir /Applications/zeronews service --user start'"
-APPLESCRIPT
-```
+| Tier | 做法 |
+|------|------|
+| 多数 CLI | **关沙箱** + `env -u …` |
+| **1 系统** | `service install && service start`（`sudo -n` 或 **一条** admin osascript） |
+| **2 用户** | `service --user install && start`（unwrap；必要时 **一条** 无 admin osascript） |
+| **3 前台** | `zeronews start`；**必须**提示用户：需**开机自启**请改**系统服务**（见 [MACOS-AGENT-SERVICE.md](../../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)） |
 
-前台 `zeronews start` 不能替代 LaunchAgent（对话结束即停）。
+完成判定：`status --json` → **running**（且非仅前台时方可宣称 Step 3/setup 装完）。
 
 ## 每条普通命令前缀
 
@@ -46,10 +43,10 @@ env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBO
 
 ## Agent 必须
 
-1. **关 Shell 沙箱**（`all`），再跑 `--user` 或 osascript。
-2. **除** `--user install+start` 外 **一律不提权、不 osascript**。
-3. Step 4 **仅在 `login: true` 之后**；每任务 **至多一条** osascript。
-4. 仍失败 → 给用户 Terminal 两条 `--user` 命令；不要前台冒充完成。
+1. **关 Shell 沙箱**（`all`），再跑服务或 osascript。
+2. **除** Tier 1/2 的 `service … install+start` 外 **一律不提权、不 osascript**（`status` 等仍禁止 admin osascript）。
+3. Step 4 **仅在 `login: true` 之后**；Tier 1 **至多一条** admin osascript，Tier 2 **至多一条** 无 admin osascript。
+4. Tier 3 前台 → **必须**说明系统服务与开机自启；给 Terminal `sudo … service install/start` 备选。
 
 ## 相关
 

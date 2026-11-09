@@ -48,12 +48,11 @@ Silently inspect whether the session is already elevated:
 
 If not elevated and the action requires it on **Linux/Windows**, tell the user to rerun with `sudo` or an Administrator shell.
 
-On **macOS** (non-root):
+On **macOS** when **start** / **install** and client not running:
 
+- Follow [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md): **system → `--user` → foreground**; foreground → **开机自启请用系统服务** 提示.
 - **`status` / `reload`:** unwrap only — **no** osascript.
-- **`service --user install` + `start`:** unwrap first; **one** osascript **without** `administrator privileges` batching both if needed ([MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)).
 - **`service --user stop|uninstall`:** unwrap only.
-- **System `service …`:** only when root / `sudo -n` or user explicitly asked system daemon — not default Agent path.
 
 ### Step 2: Use the existing service commands
 
@@ -82,20 +81,14 @@ zeronews --workdir {WORKDIR} service status
 ### Step 3: Respect OS differences
 
 - Linux uses `systemd`
-- macOS uses `launchd` — **user LaunchAgent** (`service --user`) default for Agents; system daemon when root/explicit request
+- macOS uses `launchd` — prefer **system** LaunchDaemon, then **`service --user`**, then foreground (MACOS-AGENT-SERVICE)
 - Windows uses the Windows Service Manager
 
 Do not paper over platform-specific privilege or file-path errors.
 
-#### macOS Agent path (`service --user` + osascript)
+#### macOS Agent path
 
-When **not root**, use **`service --user`**. **Only** `install` and/or `start` may use **one** non-admin osascript (batch with `&&`). Example when already installed:
-
-```bash
-osascript -e 'do shell script "/bin/bash -lc '\''/Applications/zeronews/zeronews --workdir /Applications/zeronews service --user start'\''"'
-```
-
-**Do not** osascript for status/reload/stop/uninstall.
+Use **MACOS-AGENT-SERVICE** tier order for install/start. **Do not** raw `launchctl`. **Do not** osascript for status/reload/stop/uninstall.
 
 **Uninstall / reset on macOS (both sides):** `sudo zeronews --workdir "$WORKDIR" service uninstall` or `sudo zeronews --workdir "$WORKDIR" reset`.
 
