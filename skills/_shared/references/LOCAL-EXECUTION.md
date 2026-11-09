@@ -13,9 +13,9 @@ ZeroNews 依赖 **用户电脑** 上的客户端二进制、`config.yml`、系�
 
 ## WorkBuddy / CodeBuddy（`TOYBOX_SANDBOX_SOCK`）
 
-`zeronews service --user start` 会调用 **`launchctl bootstrap`**。沙箱内常见 **Bootstrap error 5**；前台 `start` 可能仍能跑，但 **对话结束客户端就停**。
+macOS 默认 **系统 LaunchDaemon**（非 `service --user`）。非 root 时用 **`osascript` + `with administrator privileges`** 跑 `service install/start`（用户点一次管理员密码）。沙箱内直连 `sudo`/`launchctl` 常失败；前台 `start` 可能仍能跑，但 **对话结束客户端就停**。
 
-- 所有 `zeronews`（尤其 `service --user install/start`）须 **关沙箱** + [AGENT-SHELL-UNWRAP.md](./AGENT-SHELL-UNWRAP.md) 前缀。
+- 探测类 `zeronews` 须 **关沙箱** + [AGENT-SHELL-UNWRAP.md](./AGENT-SHELL-UNWRAP.md) 前缀；起服务见 [MACOS-AGENT-SERVICE.md](../../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)。
 - skills-setup / install **不得以仅前台** 作为 Step 3 完成条件（除非用户明确要前台）。
 
 ## Agent 怎么做

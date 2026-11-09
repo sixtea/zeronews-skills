@@ -4,7 +4,7 @@ description: Manage the ZeroNews client as a native OS service with `zeronews se
 license: MIT
 metadata:
   author: zeronews
-  version: "1.2"
+  version: "1.3"
 compatibility: Requires the `zeronews` CLI. Available behavior is platform-specific across Linux, macOS, and Windows.
 ---
 
@@ -46,7 +46,7 @@ Silently inspect whether the session is already elevated:
 - Linux / macOS: `id -u` → `0` means root
 - Windows: Administrator shell check per `../zeronews-configure-client/references/PRIVILEGE-EXECUTION.md`
 
-If not elevated and the action requires it, tell the user to rerun with `sudo` or an Administrator shell. The agent cannot enter a password interactively.
+If not elevated and the action requires it on **Linux/Windows**, tell the user to rerun with `sudo` or an Administrator shell. On **macOS**, use **osascript `with administrator privileges`** for install/start/stop/restart/uninstall when `sudo -n` fails — same as install skill (user sees one administrator password dialog per elevated script).
 
 ### Step 2: Use the existing service commands
 
@@ -69,25 +69,20 @@ zeronews --workdir {WORKDIR} service status
 ### Step 3: Respect OS differences
 
 - Linux uses `systemd`
-- macOS uses `launchd` (system **LaunchDaemon** with `sudo`, or per-user **LaunchAgent** with `service --user` for Agents)
+- macOS uses `launchd` — **system LaunchDaemon** (default Agent path: root / `sudo -n` / **osascript administrator**)
 - Windows uses the Windows Service Manager
 
 Do not paper over platform-specific privilege or file-path errors.
 
-#### macOS Agent path (`service --user`)
+#### macOS Agent path (system service + osascript)
 
-When the session is **not root** and the user did not get a silent `sudo -n`, use **user LaunchAgent** (not `sudo service`). **Always** `service --user install` **before** `service --user start` (same rule as install Step 4):
+When the session is **not root** and `sudo -n` does not work, use **osascript administrator** wrapping **system** `zeronews service …` (same as [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)). Example start when already installed:
 
 ```bash
-WORKDIR="${WORKDIR:-/Applications/zeronews}"
-zeronews --workdir "$WORKDIR" service --user install
-zeronews --workdir "$WORKDIR" service --user start
-zeronews --workdir "$WORKDIR" service --user status
-zeronews --workdir "$WORKDIR" service --user stop
-zeronews --workdir "$WORKDIR" service --user restart
+osascript -e 'do shell script "/Applications/zeronews/zeronews --workdir /Applications/zeronews service start" with administrator privileges'
 ```
 
-Full order and fallbacks: [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md). **Do not** document `--user` in human-facing install pages; Skills/Agent only.
+Use unwrap + non-elevated `status --json` for health when possible. **`service --user` is not the default Agent path** — only if the user explicitly requested user LaunchAgent.
 
 **Uninstall / reset on macOS (both sides):** `sudo zeronews --workdir "$WORKDIR" service uninstall` or `sudo zeronews --workdir "$WORKDIR" reset`.
 

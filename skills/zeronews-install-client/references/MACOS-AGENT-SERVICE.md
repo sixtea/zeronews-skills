@@ -1,82 +1,109 @@
-# macOS Agent service (`service --user`)
+# macOS Agent system service (LaunchDaemon + osascript)
 
-**Audience:** AI Agent / Skills only — **not** for end-user install docs or `INSTALL-COMMANDS.md` (human path stays `sudo service`).
+**Audience:** AI Agent / Skills only — **not** for end-user install docs or `INSTALL-COMMANDS.md` (human path stays `sudo service` in Terminal).
 
-**Requires:** Client build with `zeronews service --user` (LaunchAgent in `~/Library/LaunchAgents/`).
+**Requires:** Client with macOS `zeronews service install|start` (system LaunchDaemon under `/Library/LaunchDaemons/`).
+
+**Do not** use `service --user` (LaunchAgent) on the **default Agent install / manage path**. User LaunchAgent remains in the CLI for advanced/human use only when the user **explicitly** asks for `--user`.
 
 ## Workdir
 
-**Default (Agent + install skill):** `/Applications/zeronews` — binary directory and `--workdir` are the **same path**. Use it for `login`, `status`, `service`, `service --user`, `reset`, and foreground `start`.
+**Default (Agent + install skill):** `/Applications/zeronews` — binary directory and `--workdir` are the **same path**. Use it for `login`, `status`, `service`, `reset`, and foreground `start`.
 
 ```bash
 WORKDIR="${WORKDIR:-/Applications/zeronews}"
+BIN="${BIN:-/Applications/zeronews/zeronews}"
 ```
 
 Preflight and all commands use this path unless the user explicitly overrides `--workdir`. Align with [WORKDIRS.md](../../zeronews-configure-client/references/WORKDIRS.md).
 
-`service --user` requires the workdir to be **writable** by the current user. Official install targets `/Applications/zeronews` (often admin-writable after install). If install reports `workdir must be writable`, fix permissions on that directory or fall through to **foreground** `start` (Step 4 tier 4) — do **not** silently pick another workdir.
-
-## User LaunchAgent: install before start (mandatory)
-
-Whenever Skills bring up the **user** service (`service --user`), run **two commands in order**:
-
-1. `zeronews --workdir "$WORKDIR" service --user install`
-2. `zeronews --workdir "$WORKDIR" service --user start`
-
-Do **not** call `service --user start` alone on first bring-up or after upgrade/reset unless `install` just succeeded in the same flow. Re-running `install` is idempotent when the plist already exists. Use `service --user restart` only when the Agent is already registered **and** the process was running.
-
 ## Start order (macOS native, install Step 4)
 
-Do **not** ask the user to choose service vs foreground. **Do not** wait for interactive `sudo`.
+Do **not** ask the user to choose service vs foreground. **Do not** block on «要不要 sudo».
 
 | Order | When | Action |
 |------|------|--------|
 | 1 | `id -u` is `0` | `zeronews --workdir "$WORKDIR" service install` then `service start` (system LaunchDaemon) |
-| 2 | Non-root and `sudo -n zeronews --workdir "$WORKDIR" service install` **and** `service start` succeed | System service (no password prompt) |
-| 3 | Non-root and silent `sudo` unavailable | `zeronews --workdir "$WORKDIR" service --user install` then `service --user start` |
-| 4 | Step 3 fails after **WorkBuddy unwrap + non-sandbox retry** (see below) | Foreground **session only** — **not** install complete |
+| 2 | Non-root and `sudo -n` succeeds for **both** `service install` and `service start` | System service (no password prompt) |
+| 3 | Non-root and step 2 did **not** run | **osascript administrator** — one macOS password dialog — runs **system** `service install` then `service start` as root (see below) |
+| 4 | Step 3 cancelled or failed after unwrap + non-sandbox retry | Foreground **session only** — **not** install complete |
 | — | User explicitly asked 前台 / no service | Skip 1–3; only foreground |
 
-Commands for step 3 (WorkBuddy / sandboxed Agent Shell — **mandatory prefix** on **both** lines):
+Report which tier succeeded: `system` (root / `sudo -n` / **osascript-admin**), or `foreground`.
+
+## Tier 3: osascript with administrator privileges (mandatory for non-root Agents)
+
+**Goal:** Run **`zeronews service install`** and **`zeronews service start`** as **root** inside `do shell script … with administrator privileges`, so the user sees the **standard macOS administrator password** sheet. This is **Skills-side orchestration** — not the client’s internal no-privilege osascript used for `--user` launchctl.
+
+**Before tier 3:**
+
+1. **Shell sandbox off** + [AGENT-SHELL-UNWRAP.md](../../_shared/references/AGENT-SHELL-UNWRAP.md) on all non-elevated `zeronews` probes (`login`, `status --json`, upgrade).
+2. If a **user LaunchAgent** was registered earlier (`~/Library/LaunchAgents/com.zeronews.client.plist`), best-effort **`service --user stop`** + **`service --user uninstall`** (unwrap prefix) so only the system daemon owns the workdir — **do not** register `--user` again on the default path.
+3. Tell the user briefly: **macOS will ask for your login password once** to install the system service (not Terminal).
+
+**Single password (preferred)** — install then start in one elevated shell:
 
 ```bash
-ZN='env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBOX_SANDBOX_SOCK'
-$ZN zeronews --workdir "$WORKDIR" service --user install
-$ZN zeronews --workdir "$WORKDIR" service --user start
-$ZN zeronews --workdir "$WORKDIR" service --user status
+osascript <<'APPLESCRIPT'
+do shell script "/Applications/zeronews/zeronews --workdir /Applications/zeronews service install && /Applications/zeronews/zeronews --workdir /Applications/zeronews service start" with administrator privileges
+APPLESCRIPT
 ```
 
-Run with **Shell sandbox disabled**. Full details: [AGENT-SHELL-UNWRAP.md](../../_shared/references/AGENT-SHELL-UNWRAP.md).
+**Two prompts (only if combined command fails and you must isolate):**
 
-Report which tier succeeded: `system`, `user-agent`, or `foreground`.
+```bash
+osascript -e 'do shell script "/Applications/zeronews/zeronews --workdir /Applications/zeronews service install" with administrator privileges'
+osascript -e 'do shell script "/Applications/zeronews/zeronews --workdir /Applications/zeronews service start" with administrator privileges'
+```
 
-## WorkBuddy: `--user` must succeed for a finished install
+Adjust `$BIN` / `$WORKDIR` only when the user explicitly overrode install path.
 
-- **`install` 可成功、`start` 失败** 是正常现象：`install` 不写 launchd；`start` 调 `launchctl bootstrap`，IDE Shell 常被拒（error 5）。仅跟 **Usage** 多半是 **start 报错后 cobra 尾注**，不是没认 `--user`（`status --user` 能跑即说明 CLI 支持）。
-- **Foreground `start` dies when the Agent chat ends** (child of the sandboxed Shell). For default install / skills-setup, **`user-agent` or system daemon** is the success mode — not foreground.
-- **`Bootstrap error 5`** → 先 `env -u` 重试 `service --user start`；**4.1.1+ 客户端**会在内部用 **osascript** 再 bootstrap（WorkBuddy 内应能起用户级服务，勿让用户去 Terminal）。仍失败才给 Terminal 兜底块。
-- `install` 在 WorkBuddy 跑过后请再执行一次 `service --user install`（4.1.1+ 写入精简 PATH，去掉 brokered-bin）。
-- **Do not** advance to expose / Step 4 setup on foreground-only unless the user explicitly chose 前台 / no service.
-- After a successful `--user start`, verify **`service --user status`** → `running` and Local API health — same as Step 5.
+**After tier 3 succeeds**, verify **without** asking the user again:
 
-## When `--user` fails → foreground
+```bash
+env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBOX_SANDBOX_SOCK \
+  "$BIN" --workdir "$WORKDIR" status --json
+```
 
-Retry tier 3 with unwrap + non-sandbox **once** before foreground. Fallback **without** asking only after that:
+Use Local API / `status --json` **`running`** as the primary signal. If you need launchd text status and non-root `service status` fails, you may run one elevated:
 
-- Client too old (no `--user` flag / unknown flag error)
-- `workdir must be writable` on install (and user did not ask to change workdir)
-- `another zeronews client is already running` (often **system** still running) — Agent cannot `sudo service stop` silently; tell user if needed, then try foreground for this session
-- `service --user start` OK but Step 5 shows not running (no **Aqua** / headless SSH — LaunchAgent may not load)
-- Any non-zero exit after one install+start attempt
+```bash
+osascript -e 'do shell script "/Applications/zeronews/zeronews --workdir /Applications/zeronews service status" with administrator privileges'
+```
 
-## Coexistence with system service
+**User cancelled the password dialog** → tier 3 failed; do **not** fall back to `service --user`; go to tier 4 (foreground) or give a **Terminal.app** block with `sudo … service install && sudo … service start`.
 
-- System Daemon and user Agent plists may both exist; **only one process** per workdir.
-- If `sudo` system service is already running, stop it before `--user start` (needs user in the loop for `sudo`) or use foreground until stopped.
+## WorkBuddy / IDE Agents
+
+- **Do not** use `service --user install` / `service --user start` to finish install or skills-setup Step 3.
+- Direct `sudo` or `launchctl` from a sandboxed Agent Shell often fails; **tier 3 osascript** is the intended interactive elevation for **system** service.
+- Foreground `zeronews start` in the Agent may still work for debugging but **dies when the chat ends** — not a completed install.
+
+## When tier 3 fails → foreground
+
+Retry tier 3 **once** with Shell sandbox disabled and unwrap applied. Fallback **without** asking only after that:
+
+- User **cancelled** administrator dialog
+- `osascript` / Automation blocked (no GUI session, policy denies OSA)
+- `service install` / `start` error inside elevated script (read AppleScript error text)
+- `another zeronews client is already running` — stop conflicting instance (foreground `stop` / `shutdown`, or user runs `sudo … service stop`) then retry tier 3
+- Any non-zero exit after one combined osascript attempt + one retry
+
+## Coexistence with user LaunchAgent
+
+- System LaunchDaemon and user LaunchAgent plists must **not** both run the same workdir.
+- Default Agent path: **system only** after tier 3. Remove stale `--user` registration before install when possible.
 
 ## Reset / uninstall (Agent)
 
-- Full local cleanup on macOS: **`sudo zeronews --workdir "$WORKDIR" reset`** (uninstalls **both** sides + clears state).
-- Service registration only: **`sudo zeronews --workdir "$WORKDIR" service uninstall`**.
+- Full local cleanup on macOS: elevated **`zeronews --workdir "$WORKDIR" reset`** (uninstalls **both** sides + clears state) — use osascript `with administrator privileges` when the Agent is not root.
+- Service registration only: **`sudo zeronews --workdir "$WORKDIR" service uninstall`** (or osascript equivalent).
 
 Do **not** run bare `zeronews reset` on macOS for full cleanup.
+
+## Explicit `--user` (exception only)
+
+If the user **explicitly** requests user LaunchAgent / no system daemon / 不要系统服务:
+
+- You may use `service --user` per CLI help — **outside** the default install pipeline.
+- Do **not** treat that as skills-setup Step 3 complete unless they accept session or persistence limits.

@@ -44,7 +44,7 @@ Before asking tunnel details or running `add`:
 
 1. Run read-only checks (prefer `zeronews-inspect-client` flow): `login: true`, client **running** and Local API healthy.
 2. If not configured → hand off to `zeronews-configure-client` (do not ask which port to map yet).
-3. If configured but not running → hand off to `zeronews-manage-client-service` (`service start` / on **macOS non-root** **`service --user install`** then **`service --user start`** per [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)) or foreground `zeronews start` as last resort.
+3. If configured but not running → hand off to `zeronews-manage-client-service` (`service start` / on **macOS non-root** **osascript administrator** system `service start` or install+start per [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)) or foreground `zeronews start` as last resort.
 4. If `login_pending` or `login: false` → hand off **`zeronews-configure-client`** or complete install Step 3 ([BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md): **open browser + same-Shell poll**) before expose.
 5. If install skill ran but client not started → **`zeronews-manage-client-service`** or `zeronews start` (install Step 4).
 

@@ -52,7 +52,7 @@ curl -sk "${CP_BASE}/client/download/latest?os=${OS}&arch=${ARCH}&current_versio
 
 1. 预检 JSON 有 **`download_url`** → **直接下载覆盖** 当前平台二进制（macOS/Windows 替换文件；Linux 可用 install script 或 `download_url`），权限不足时用 `sudo` 仅作用于二进制路径。  
 2. 无 `download_url` → 用 INSTALL-COMMANDS 中 **Base download host** 与平台路径覆盖（**直接执行**）。  
-3. 客户端若在跑 → **`service restart`** / **`service --user restart`**（macOS 非 root，且 LaunchAgent 已注册）/ `reload`；若未 running → 按 Step 4：**macOS 非 root 先 `service --user install` 再 `service --user start`**，否则 **`start`**。  
+3. 客户端若在跑 → **`service restart`**（macOS 非 root 可用 **osascript administrator** 跑 system `service restart`）/ `reload`；若未 running → 按 Step 4：**macOS 非 root 用 osascript 提权 system `service install` + `service start`**，否则 **`start`**。  
 4. 再读 `zeronews --version`；仍落后 → 再执行一次 **install script / 平台安装命令**（不 reset config）→ restart。
 
 全程 **告知** 当前版 → 目标版与动作；**不要**问「是否升级」。
@@ -60,7 +60,7 @@ curl -sk "${CP_BASE}/client/download/latest?os=${OS}&arch=${ARCH}&current_versio
 ### 4. 升级后
 
 - 继续 install skill：**本轮**若 Step 3 未执行或失败且仍 `login: false` → **`zeronews-configure-client`** 或 **续跑 install Step 3**（二选一）；**禁止** Step 3 已成功后再 configure。  
-- 未 running → 按 SKILL Step 4：**root/`sudo -n` → system service**；**macOS 非 root → 先 `service --user install` 再 `service --user start`，失败再前台**（见 [MACOS-AGENT-SERVICE.md](./MACOS-AGENT-SERVICE.md)）。  
+- 未 running → 按 SKILL Step 4：**root/`sudo -n` → system service**；**macOS 非 root → osascript administrator 起 system 服务，失败再前台**（见 [MACOS-AGENT-SERVICE.md](./MACOS-AGENT-SERVICE.md)）。  
 - 验证：`zeronews --version` 或 `inspect-client` / `status --json`。
 
 ## 仍须用户选择的情况（非升级询问）
