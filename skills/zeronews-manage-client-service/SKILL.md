@@ -4,7 +4,7 @@ description: Manage the ZeroNews client as a native OS service with `zeronews se
 license: MIT
 metadata:
   author: zeronews
-  version: "1.5"
+  version: "1.6"
 compatibility: Requires the `zeronews` CLI. Available behavior is platform-specific across Linux, macOS, and Windows.
 ---
 
@@ -48,11 +48,12 @@ Silently inspect whether the session is already elevated:
 
 If not elevated and the action requires it on **Linux/Windows**, tell the user to rerun with `sudo` or an Administrator shell.
 
-On **macOS**:
+On **macOS** (non-root):
 
-- **`status`:** **never** osascript — use unwrap + **`status --json`** (or `service status` only when already root).
-- **`reload`:** unwrap only when the daemon is running — **no** osascript.
-- **`install` / `start` / `stop` / `restart` / `uninstall`:** root / `sudo -n` first; else **one** osascript per request (batch subcommands with `&&`). See [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md).
+- **`status` / `reload`:** unwrap only — **no** osascript.
+- **`service --user install` + `start`:** unwrap first; **one** osascript **without** `administrator privileges` batching both if needed ([MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)).
+- **`service --user stop|uninstall`:** unwrap only.
+- **System `service …`:** only when root / `sudo -n` or user explicitly asked system daemon — not default Agent path.
 
 ### Step 2: Use the existing service commands
 
@@ -81,20 +82,20 @@ zeronews --workdir {WORKDIR} service status
 ### Step 3: Respect OS differences
 
 - Linux uses `systemd`
-- macOS uses `launchd` — **system LaunchDaemon** (default Agent path: root / `sudo -n` / **osascript administrator**)
+- macOS uses `launchd` — **user LaunchAgent** (`service --user`) default for Agents; system daemon when root/explicit request
 - Windows uses the Windows Service Manager
 
 Do not paper over platform-specific privilege or file-path errors.
 
-#### macOS Agent path (system service + osascript)
+#### macOS Agent path (`service --user` + osascript)
 
-When the session is **not root** and `sudo -n` does not work, use **one** osascript only for the **mutating** `service …` action (see [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)). Example start when already installed:
+When **not root**, use **`service --user`**. **Only** `install` and/or `start` may use **one** non-admin osascript (batch with `&&`). Example when already installed:
 
 ```bash
-osascript -e 'do shell script "/Applications/zeronews/zeronews --workdir /Applications/zeronews service start" with administrator privileges'
+osascript -e 'do shell script "/bin/bash -lc '\''/Applications/zeronews/zeronews --workdir /Applications/zeronews service --user start'\''"'
 ```
 
-**Do not** osascript for status. **`service --user` is not the default Agent path** — only if the user explicitly requested user LaunchAgent.
+**Do not** osascript for status/reload/stop/uninstall.
 
 **Uninstall / reset on macOS (both sides):** `sudo zeronews --workdir "$WORKDIR" service uninstall` or `sudo zeronews --workdir "$WORKDIR" reset`.
 
@@ -102,7 +103,7 @@ osascript -e 'do shell script "/Applications/zeronews/zeronews --workdir /Applic
 
 **Out of scope:** **`zeronews-install-client` Step 1b** binary upgrade — no `service restart` / stop / start (see [UPGRADE-ON-INSTALL.md](../zeronews-install-client/references/UPGRADE-ON-INSTALL.md)). **Install Step 4** owns first `service install/start` after `login: true` — do not duplicate in the same task.
 
-When **`zeronews-configure-client`** or **`zeronews-install-client`** completes browser login and a system service is **already installed and running**, run **`reload`** with unwrap first (no elevation). Use **`service restart`** via root / `sudo -n` / **one** osascript **only if** `reload` failed and `status --json` is still wrong, or the client is not running. Skipping reload leaves expose/share flows talking to a stale process.
+When **`zeronews-configure-client`** or **`zeronews-install-client`** completes browser login and a system service is **already installed and running**, run **`reload`** with unwrap first (no elevation). Use **`service --user restart`** with unwrap only if `reload` failed; **do not** osascript restart unless combined with install/start in same policy. Skipping reload leaves expose flows stale.
 
 If no service is installed, foreground `zeronews start` is enough.
 

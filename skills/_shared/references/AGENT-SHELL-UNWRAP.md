@@ -1,55 +1,41 @@
 # Agent Shell unwrap（WorkBuddy / CodeBuddy / Cursor）
 
-部分 Agent 执行 Shell 时会注入沙箱变量（常见 **`TOYBOX_SANDBOX_SOCK`**），且 **seatbelt 仍可能禁止 `launchctl` / 直接 `sudo`**。
+部分 Agent 执行 Shell 时会注入沙箱变量（常见 **`TOYBOX_SANDBOX_SOCK`**），且 **seatbelt 仍可能禁止 `launchctl bootstrap`**（Bootstrap error 5）。
 
-## 禁止对下列命令提权（只用 `env -u …`，不要 osascript）
+## 禁止 osascript（只用 `env -u …`）
 
-`login`、`status --json`、`--version`、`reload`（服务已 running 时）、升级 `curl`、`zeronews add` / expose、探活、`service --user stop|uninstall`、读取配置。**禁止** osascript 执行 `service status` — 用 `status --json`。
+`login`、`status --json`、`--version`、`reload`、升级 `curl`、`zeronews add` / expose、`service --user stop|uninstall|status`、探活。**不要** `with administrator privileges`。
 
-## macOS 持久后台（install / setup 默认）
-
-**默认路径是系统 LaunchDaemon**，不是 `service --user`。
+## macOS 持久后台（install / setup 默认：`service --user`）
 
 | 步骤 | Agent 做法 |
 |------|------------|
-| `login` / `status --json` / 下载升级 | **关沙箱** + 下方 `env -u …` 前缀 |
-| 非 root、`sudo -n` 不可用 | **`osascript` + `with administrator privileges`** 跑 `service install && service start`（一次密码） |
-| 完成判定 | `status --json` → **running**，系统 **`service status`** 或 Local API 探活 |
-
-详见 [MACOS-AGENT-SERVICE.md](../../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)。**禁止**在默认安装里用 `service --user` 冒充完成。
+| 多数 CLI | **关沙箱** + `env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBOX_SANDBOX_SOCK` |
+| **仅** Step 4：`service --user install` **且** `service --user start` | 先试 unwrap 直连；失败则 **一条** `osascript` `do shell script`（**无** administrator privileges），两条命令 `&&` 合并 |
+| 完成判定 | `service --user status` + `status --json` → **running** |
 
 ```bash
 osascript <<'APPLESCRIPT'
-do shell script "/Applications/zeronews/zeronews --workdir /Applications/zeronews service install && /Applications/zeronews/zeronews --workdir /Applications/zeronews service start" with administrator privileges
+do shell script "/bin/bash -lc '/Applications/zeronews/zeronews --workdir /Applications/zeronews service --user install && /Applications/zeronews/zeronews --workdir /Applications/zeronews service --user start'"
 APPLESCRIPT
 ```
 
-与客户端内部的 **无提权** osascript（仅 `--user` launchctl 兜底）**不是同一路径**。
+前台 `zeronews start` 不能替代 LaunchAgent（对话结束即停）。
 
-前台 `zeronews start` 在 Agent 里往往仍能跑，但 **对话结束即进程退出**，不能替代系统服务。
-
-## 每条普通 `zeronews` 命令前缀（与 skills-setup Step 2 一致）
+## 每条普通命令前缀
 
 ```bash
 env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBOX_SANDBOX_SOCK
 ```
 
-示例（探测 / login / status — **不要**把整段 env 塞进未 `eval` 的单个变量；请写满一行或 `eval`）：
-
-```bash
-env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBOX_SANDBOX_SOCK \
-  /Applications/zeronews/zeronews --workdir /Applications/zeronews status --json
-```
-
-**不要用**错误写法：`ZN='env -u …'` 后仅 `$ZN /path`（部分 Shell 会把整串当成一个命令名）。
+不要用 `ZN='env -u …'` 再裸 `$ZN /path`（会整串当成命令名）。
 
 ## Agent 必须
 
-1. **关闭 Shell 沙箱**（IDE 请求完整本机权限 / `all`）。
-2. **默认**：所有 CLI 仅 **`env -u …` 前缀**，不提权。
-3. **仅** macOS 系统 `service install|start|stop|restart|uninstall` 或 `reset` 在 `sudo -n` 失败时 → **一条** osascript（多命令用 `&&` 合并），每阶段至多 **一次** 密码。
-4. 完成判定：`status --json` **running**（不提权）；**不是** `service --user`。
-5. 用户 **取消密码** → 关沙箱重试一次；仍失败 → Terminal `sudo …`；**不要**前台冒充装好。
+1. **关 Shell 沙箱**（`all`），再跑 `--user` 或 osascript。
+2. **除** `--user install+start` 外 **一律不提权、不 osascript**。
+3. Step 4 **仅在 `login: true` 之后**；每任务 **至多一条** osascript。
+4. 仍失败 → 给用户 Terminal 两条 `--user` 命令；不要前台冒充完成。
 
 ## 相关
 
