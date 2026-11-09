@@ -114,7 +114,7 @@ Do **not** ask upfront questions that duplicate silent detection (OS, existing b
 
 When `zeronews` / `zeronews.exe` is already present and the user did **not** say probe-only / 只探测 / 不要升级 / don't download:
 
-1. Follow **[UPGRADE-ON-INSTALL.md](./references/UPGRADE-ON-INSTALL.md)** end-to-end — **platform `download/latest` only**; **never** `device download-resolve` / `device upgrade` / `client_id` on install.
+1. Follow **[UPGRADE-ON-INSTALL.md](./references/UPGRADE-ON-INSTALL.md)** end-to-end — **platform `download/latest` only** on the **user backend** ([CONTROL-PLANE-VS-DOWNLOAD.md](./references/CONTROL-PLANE-VS-DOWNLOAD.md)); **never** call it on the INSTALL-COMMANDS CDN host; **never** `device download-resolve` / `device upgrade` / `client_id` on install.
 2. **Do not** ask «已安装，是否跳过 / 是否要升级».
 3. After version is **latest** (or upgrade exhausted with clear error), continue with bind/start/verify below — skip redundant full download if binary is already current.
 

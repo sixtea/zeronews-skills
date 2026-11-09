@@ -26,6 +26,8 @@ zeronews --version
 
 ### 2. 预检（平台 latest，与 CP 对齐）
 
+**先解析 `CP_BASE`**（禁止用 INSTALL-COMMANDS 下载域）：见 [CONTROL-PLANE-VS-DOWNLOAD.md](./CONTROL-PLANE-VS-DOWNLOAD.md)。
+
 按本机平台拼查询（与 MCP `fetchOfficialDownloadLatest` 一致）：
 
 | OS | `os` | `arch`（`uname -m`） |
@@ -36,14 +38,13 @@ zeronews --version
 | Linux x86_64 | `linux` | `amd64` |
 
 ```bash
-# 控制面根址 = 客户端编译内嵌 user backend（或 env ZERONEWS_CONTROL_PLANE_URL / 文档 testenv）
 curl -sk "${CP_BASE}/client/download/latest?os=${OS}&arch=${ARCH}&current_version=${CURRENT_VERSION}"
 ```
 
 解析 envelope JSON：`can_upgrade`、`must_upgrade`、`version`（目标版）、`download_url`、`checksum`。  
 当 **`can_upgrade` 与 `must_upgrade` 均为 false** 且当前版非空 → 视为 **`is_latest`** → 跳到 bind/start/verify（无需下载整包）。
 
-**未配置 CP 或 HTTP 失败**：按 [INSTALL-COMMANDS.md](./INSTALL-COMMANDS.md) 官方 CDN 覆盖安装一次（不 reset config），勿向用户确认下载域。
+**HTTP 失败（含对 agentv2 误请求的 404）**：先按 CONTROL-PLANE-VS-DOWNLOAD 纠正 `CP_BASE` 并重试一次；仍失败则按 [INSTALL-COMMANDS.md](./INSTALL-COMMANDS.md) 官方 **CDN** 覆盖二进制比对（不 reset config），勿向用户确认下载域。
 
 ### 3. 非 latest — 自动升级（禁止询问用户）
 
