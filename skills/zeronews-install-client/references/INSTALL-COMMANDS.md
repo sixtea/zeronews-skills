@@ -11,7 +11,7 @@ Before any command shown with `sudo`, check whether the current session is alrea
 Base download host (binary CDN only):
 
 ```text
-https://agentv2.testenv.waitoin.com:8443
+https://download.zeronews.cc
 ```
 
 ## Linux
@@ -21,7 +21,7 @@ Supported distros include Debian, Ubuntu, RHEL, CentOS, AlmaLinux, OpenEuler, Op
 Install the binary only, then bind with browser login (**see [BROWSER-LOGIN.md](../../_shared/references/BROWSER-LOGIN.md)** — `NO_TTY` does not open the browser; Agent must `open`/`xdg-open`):
 
 ```bash
-curl -SLk https://agentv2.testenv.waitoin.com:8443/linux/zeronews-install.sh | sh -s install
+curl -SLk https://download.zeronews.cc/linux/zeronews-install.sh | sh -s install
 url=$(NO_TTY=1 zeronews --workdir /etc/zeronews login 2>&1 | grep -Eo 'https?://[^[:space:]]+' | head -1)
 xdg-open "$url"    # macOS: open "$url"
 # then poll status --json in same shell (jq '.login == true')
@@ -30,13 +30,13 @@ xdg-open "$url"    # macOS: open "$url"
 The official script still accepts a token (unchanged):
 
 ```bash
-curl -SLk https://agentv2.testenv.waitoin.com:8443/linux/zeronews-install.sh | sh -s install {TOKEN}
+curl -SLk https://download.zeronews.cc/linux/zeronews-install.sh | sh -s install {TOKEN}
 ```
 
 Use `sudo` when the environment requires elevated privileges. Pair sudo with the same workdir (`/etc/zeronews`):
 
 ```bash
-curl -SLk https://agentv2.testenv.waitoin.com:8443/linux/zeronews-install.sh | sudo sh -s install
+curl -SLk https://download.zeronews.cc/linux/zeronews-install.sh | sudo sh -s install
 sudo NO_TTY=1 zeronews login
 sudo zeronews status --json
 ```
@@ -83,7 +83,7 @@ Expected value: `arm64`
 ```bash
 mkdir -p /Applications/zeronews
 cd /Applications/zeronews
-curl -o zeronews.tmp https://agentv2.testenv.waitoin.com:8443/macos/arm/zeronews
+curl -o zeronews.tmp https://download.zeronews.cc/macos/arm/zeronews
 mv zeronews.tmp zeronews
 chmod +x zeronews
 ```
@@ -95,7 +95,7 @@ Expected `uname -m` value: `x86_64`
 ```bash
 mkdir -p /Applications/zeronews
 cd /Applications/zeronews
-curl -o zeronews.tmp https://agentv2.testenv.waitoin.com:8443/macos/amd/zeronews
+curl -o zeronews.tmp https://download.zeronews.cc/macos/amd/zeronews
 mv zeronews.tmp zeronews
 chmod +x zeronews
 ```
@@ -137,7 +137,7 @@ Requires Windows 10 or later, 64-bit.
 Download URL:
 
 ```text
-https://agentv2.testenv.waitoin.com:8443/windows/x64/zeronews.exe
+https://download.zeronews.cc/windows/x64/zeronews.exe
 ```
 
 Recommended install directory example:
@@ -150,7 +150,7 @@ PowerShell download example:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path D:\zeronews
-Invoke-WebRequest -Uri "https://agentv2.testenv.waitoin.com:8443/windows/x64/zeronews.exe" -OutFile "D:\zeronews\zeronews.exe"
+Invoke-WebRequest -Uri "https://download.zeronews.cc/windows/x64/zeronews.exe" -OutFile "D:\zeronews\zeronews.exe"
 Set-Location D:\zeronews
 ```
 
