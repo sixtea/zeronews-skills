@@ -44,7 +44,7 @@ curl -sk "${CP_BASE}/client/download/latest?os=${OS}&arch=${ARCH}&current_versio
 解析 envelope JSON：`can_upgrade`、`must_upgrade`、`version`（目标版）、`download_url`、`checksum`。  
 当 **`can_upgrade` 与 `must_upgrade` 均为 false** 且当前版非空 → 视为 **`is_latest`** → 跳到 bind/start/verify（无需下载整包）。
 
-**HTTP 失败（含对 agentv2 误请求的 404）**：先按 CONTROL-PLANE-VS-DOWNLOAD 纠正 `CP_BASE` 并重试一次；仍失败则按 [INSTALL-COMMANDS.md](./INSTALL-COMMANDS.md) 官方 **CDN** 覆盖二进制比对（不 reset config），勿向用户确认下载域。
+**HTTP 失败（含对 download CDN 误请求 `/client/download/latest` 的 404）**：先按 CONTROL-PLANE-VS-DOWNLOAD 纠正 `CP_BASE` 并重试一次；仍失败则按 [INSTALL-COMMANDS.md](./INSTALL-COMMANDS.md) 官方 **CDN** 覆盖二进制比对（不 reset config），勿向用户确认下载域。
 
 ### 3. 非 latest — 自动升级（禁止询问用户）
 
