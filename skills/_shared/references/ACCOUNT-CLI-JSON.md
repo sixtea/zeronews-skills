@@ -39,7 +39,8 @@ Skills 内说明：[manage-account-tunnels/references/CLI-JSON-PATHS.md](../../s
 | 意图 | 命令 | 确认 |
 |------|------|------|
 | 删隧道 | `zeronews delete tunnel <id> --json` | 选定 id 后 **单独一步** 确认 |
-| 启停隧道 | `zeronews tunnel enable/disable <id> --json` | disable 建议确认 |
+| 启停隧道 | `zeronews tunnel <id> enable/disable --json` | disable 建议确认 |
+| 改隧道带宽 | `zeronews tunnel <id> set-bw <Mbps> --json` | 仅 standard |
 | 加平台域名 | `zeronews add domain --subdomain <prefix> --json` | 前缀 6–12 小写字母数字 |
 | 删端口 | `zeronews delete port <id> --json` | 选定 id 后 **单独一步** 确认 |
 | 删域名 | `zeronews delete domain <id> --json` | 须无 port；**单独一步** 确认 |

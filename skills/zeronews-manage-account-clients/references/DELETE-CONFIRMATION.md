@@ -29,4 +29,4 @@
 
 ## 非删除
 
-`tunnel enable/disable`、`device enable/disable` 仍按各 skill 说明；本规则 **仅针对 delete**。
+`tunnel <id> enable/disable/set-bw`、`device enable/disable` 仍按各 skill 说明；本规则 **仅针对 delete**。

@@ -1,6 +1,6 @@
 ---
 name: zeronews-manage-account-tunnels
-description: List, delete, enable, or disable tunnels on the logged-in ZeroNews account using CLI show tunnels and tunnel enable/disable. Use when the user asks for all account tunnels, to remove a tunnel, turn off a mapping on the console, or re-enable a disabled tunnel—not for listing only this machine's active endpoints (use inspect-client).
+description: List, delete, enable, disable, or change bandwidth (standard) on account tunnels via show tunnels and tunnel <id> enable|disable|set-bw. Use for account-wide tunnel ops—not local endpoints only (use inspect-client).
 license: MIT
 metadata:
   author: zeronews
@@ -22,7 +22,7 @@ Full rules: [LOCAL-EXECUTION.md](../_shared/references/LOCAL-EXECUTION.md).
 
 Operate **account-wide** tunnels via the control plane CLI. This is not the same as local `/api/v1/endpoints` — see [ACCOUNT-CLI-JSON.md](../_shared/references/ACCOUNT-CLI-JSON.md) and `zeronews-inspect-client` references.
 
-**MCP mapping**: `list_account_tunnels`, `delete_tunnel`, `enable_tunnel`, `disable_tunnel` (+ picker / `user_confirmed` delete flow).
+**MCP mapping**: `list_account_tunnels`, `delete_tunnel`, `enable_tunnel`, `disable_tunnel`, `set_tunnel_bandwidth` (+ picker / `user_confirmed` delete flow).
 
 ## Prerequisites
 
@@ -84,7 +84,7 @@ Never delete immediately after the user picks a list number. Never skip confirma
 
 ### Step 4b: Enable / disable (not delete)
 
-Before **`tunnel disable`** when impact is unclear, confirm with the user. **`tunnel enable`** may proceed when intent is clear.
+Before **`tunnel <id> disable`** when impact is unclear, confirm with the user. **`tunnel <id> enable`** or **`tunnel <id> set-bw`** may proceed when intent and Mbps are clear. **set-bw** is **standard** tunnels only (not LFS / cloud_native).
 
 ### Step 5: Execute
 
@@ -97,8 +97,9 @@ zeronews --workdir {WORKDIR} delete tunnel {TUNNEL_ID} --json
 **Enable / disable**
 
 ```bash
-zeronews --workdir {WORKDIR} tunnel enable {TUNNEL_ID} --json
-zeronews --workdir {WORKDIR} tunnel disable {TUNNEL_ID} --json
+zeronews --workdir {WORKDIR} tunnel {TUNNEL_ID} enable --json
+zeronews --workdir {WORKDIR} tunnel {TUNNEL_ID} disable --json
+zeronews --workdir {WORKDIR} tunnel {TUNNEL_ID} set-bw {MBPS} --json
 ```
 
 Deleting removes the tunnel for the **account**; it may not be bound to this device. Caller must be logged in as the owning account (same rules as MCP `delete_tunnel`).

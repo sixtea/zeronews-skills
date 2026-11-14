@@ -22,7 +22,7 @@ If `items` is empty but `total > 0`, retry with `--page` / `--size`.
 
 | Command | Id field |
 |---------|----------|
-| `show tunnels` | `items[].id` → `delete tunnel` / `tunnel enable|disable` |
+| `show tunnels` | `items[].id` → `delete tunnel` / `tunnel <id> enable|disable|set-bw` |
 | `show domains` | `items[].id` (domain); `items[].ports[].id` → `delete port` |
 | `show devices` | `items[].id` → `delete client` / `device upgrade` / `device enable|disable` |
 
