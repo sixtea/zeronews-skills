@@ -1,11 +1,12 @@
 # zeronews-skills
 
-ZeroNews 官方 **Agent Skills**。供 Cursor、Claude Code 等通过 [Skills CLI](https://github.com/vercel-labs/skills) 安装，在无 MCP 时指导 Agent 使用 `zeronews` CLI。
+ZeroNews 官方 **Agent Skills**。供 Cursor、Claude Code 等通过 [Skills CLI](https://github.com/vercel-labs/skills) 安装，在无 MCP 时指导 Agent 使用 `zeronews` CLI。  
+**Agent 执行规程以 docs `/raw/ai/` 为准：** [Skills](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md) · [MCP](https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md)（绑机默认 `zeronews login`）。
 
 ## Install
 
 ```bash
-npx skills add sixtea/zeronews-skills -g --all
+npx -y skills add sixtea/zeronews-skills -g --all
 ```
 
 或指定 Agent（示例 Cursor，全局拷贝）：
@@ -23,7 +24,7 @@ Skill 目录在仓库 **`skills/zeronews-*`** 下（共 13 个能力 skill + `ze
 | 已配置 **`zeronews-mcp`** | 优先 MCP 工具 |
 | 仅 Skills | 本仓库 |
 
-MCP 安装规程：<https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md>
+MCP 安装规程：<https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md>
 
 ## Skill 列表
 
