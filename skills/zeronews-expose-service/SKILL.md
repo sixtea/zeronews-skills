@@ -44,7 +44,7 @@ Before asking tunnel details or running `add`:
 
 1. Run read-only checks (prefer `zeronews-inspect-client` flow): `login: true`, client **running** and Local API healthy.
 2. If not configured → hand off to `zeronews-configure-client` (do not ask which port to map yet).
-3. If configured but not running → unwrap **`status --json`**. Else start per install Step 4 / **MACOS-AGENT-SERVICE**: **system → `--user` → foreground** (foreground时提示**开机自启用系统服务**).
+3. If configured but not running → unwrap **`status --json`**. Else start per install Step 4 / **MACOS-AGENT-SERVICE**: **`--user` → foreground**（**不提权**；前台时可选提示用户 Terminal 装系统服务）.
 4. If `login_pending` or `login: false` → hand off **`zeronews-configure-client`** or complete install Step 3 ([BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md): **open browser + same-Shell poll**) before expose.
 5. If install skill ran but client not started → finish **install Step 4** (`login: true` first); **do not** duplicate elevation via manage-client-service in the same task if Step 4 already attempted.
 

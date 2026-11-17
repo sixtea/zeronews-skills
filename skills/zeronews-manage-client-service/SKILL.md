@@ -4,7 +4,7 @@ description: Manage the ZeroNews client as a native OS service with `zeronews se
 license: MIT
 metadata:
   author: zeronews
-  version: "1.6"
+  version: "1.7"
 compatibility: Requires the `zeronews` CLI. Available behavior is platform-specific across Linux, macOS, and Windows.
 ---
 
@@ -50,7 +50,7 @@ If not elevated and the action requires it on **Linux/Windows**, tell the user t
 
 On **macOS** when **start** / **install** and client not running:
 
-- Follow [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md): **system → `--user` → foreground**; foreground → **开机自启请用系统服务** 提示.
+- Follow [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md): **`--user` → foreground** — **no** `sudo -n` / admin osascript unless user **explicitly** asked for system service (then print Terminal `sudo …` steps).
 - **`status` / `reload`:** unwrap only — **no** osascript.
 - **`service --user stop|uninstall`:** unwrap only.
 
@@ -63,11 +63,18 @@ env -u NODE_OPTIONS -u PYTHONPATH -u CODEBUDDY_BROKERED_FS_HOOK_ENABLED -u TOYBO
   zeronews --workdir {WORKDIR} status --json
 ```
 
-Elevated service control when `sudo -n` works:
+**System** service install/start (Agent default path: **do not** run — user runs in Terminal):
 
 ```bash
-sudo -n zeronews --workdir {WORKDIR} service install
-sudo -n zeronews --workdir {WORKDIR} service start
+sudo zeronews --workdir {WORKDIR} service install
+sudo zeronews --workdir {WORKDIR} service start
+```
+
+macOS **user** service (no elevation):
+
+```bash
+zeronews --workdir {WORKDIR} service --user install
+zeronews --workdir {WORKDIR} service --user start
 ```
 
 If `id -u` is already `0`, omit `sudo`:
@@ -81,7 +88,7 @@ zeronews --workdir {WORKDIR} service status
 ### Step 3: Respect OS differences
 
 - Linux uses `systemd`
-- macOS uses `launchd` — prefer **system** LaunchDaemon, then **`service --user`**, then foreground (MACOS-AGENT-SERVICE)
+- macOS uses `launchd` — Agent path: **`service --user`**, then foreground (MACOS-AGENT-SERVICE); system LaunchDaemon only via user Terminal
 - Windows uses the Windows Service Manager
 
 Do not paper over platform-specific privilege or file-path errors.

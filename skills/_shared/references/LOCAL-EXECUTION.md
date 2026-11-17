@@ -13,10 +13,10 @@ ZeroNews 依赖 **用户电脑** 上的客户端二进制、`config.yml`、系�
 
 ## WorkBuddy / CodeBuddy（`TOYBOX_SANDBOX_SOCK`）
 
-macOS Step 4 顺序：**系统服务 → `--user` → 前台**（见 [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)）。仅 Tier 1/2 的 install+start 可用 osascript（Tier 1 可 admin，Tier 2 无 admin）；其余仅 `env -u …`。前台 **对话结束即停**，须提示用户**开机自启用系统服务**。
+macOS Step 4 顺序：**`--user` → 前台**（见 [MACOS-AGENT-SERVICE.md](../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)）。**启动不提权**；仅 `--user` install+start 可用 **一条无 admin** osascript；其余仅 `env -u …`。系统服务由用户在本机 Terminal 自行 `sudo`。
 
 - 探测类 `zeronews` 须 **关沙箱** + [AGENT-SHELL-UNWRAP.md](./AGENT-SHELL-UNWRAP.md)；提权策略见 [MACOS-AGENT-SERVICE.md](../../zeronews-install-client/references/MACOS-AGENT-SERVICE.md)。
-- skills-setup / install **不得以仅前台** 作为 Step 3 完成条件（除非用户明确要前台）。
+- skills-setup / install：`status --json` **running** 即可过门禁（`--user` 或前台）。
 
 ## Agent 怎么做
 
