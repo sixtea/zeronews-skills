@@ -37,4 +37,4 @@ macOS Step 4 顺序：**`--user` → 前台**（见 [MACOS-AGENT-SERVICE.md](../
 - [SKILL-ROUTER.md](./SKILL-ROUTER.md)（skill 路由，同目录）
 - Skills 端到端规程：[zeronews-skills-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md)
 - 删除二次确认：各 `zeronews-manage-*` skill 内 `references/DELETE-CONFIRMATION.md`
-- Agent MCP 规程：[zeronews-mcp-agent-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md)
+- Agent MCP 规程：[zeronews-mcp-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md)

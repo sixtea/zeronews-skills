@@ -14,7 +14,7 @@
 | 仅 Skills | 按下表选择 skill |
 | 用户明确「只用命令 / 没有 MCP」 | Skills |
 
-npm 包名：**[`zeronews-mcp`](https://www.npmjs.com/package/zeronews-mcp)**。规程：[zeronews-mcp-agent-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md)（路径随文档环境可能不同）。
+npm 包名：**[`zeronews-mcp`](https://www.npmjs.com/package/zeronews-mcp)**。规程：[zeronews-mcp-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md)（路径随文档环境可能不同）。
 
 ### 认证：Skills vs MCP
 
@@ -24,7 +24,7 @@ npm 包名：**[`zeronews-mcp`](https://www.npmjs.com/package/zeronews-mcp)**。
 | **skills-setup 全量安装** | **`zeronews-install-client` Step 3**（browser login）；**勿** 再 `configure-client` |
 | **仅 Skills（无 setup 规程）** | `zeronews-configure-client`：`login`（同上）或用户已给 token 时 `authtoken` |
 | **MCP / WorkBuddy 连接器** | `configure_auth`（`ZERONEWS_AUTH_TOKEN`）；**不要**用 Skills 规程里的浏览器 login 混跑 |
-| **两者并存** | 按用户选的 **一条** 规程（setup **或** mcp-agent-setup）；映射前均须本机 **login + running** |
+| **两者并存** | 按用户选的 **一条** 规程（skills-setup **或** mcp-setup）；映射前均须本机 **login + running** |
 
 ---
 

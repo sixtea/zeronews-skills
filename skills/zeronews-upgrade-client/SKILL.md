@@ -90,4 +90,4 @@ Return: client_id, versions before/after, commands run, verification result.
 
 - Install-triggered auto upgrade: [UPGRADE-ON-INSTALL.md](../zeronews-install-client/references/UPGRADE-ON-INSTALL.md)
 - [ACCOUNT-CLI-JSON.md](../_shared/references/ACCOUNT-CLI-JSON.md)
-- [MCP-SKILLS-PARITY.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md)
+- [MCP-SKILLS-PARITY.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md)

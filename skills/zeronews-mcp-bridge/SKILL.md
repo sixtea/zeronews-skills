@@ -36,7 +36,7 @@ Do **not** assume MCP is loaded because npm exists or because another skill was 
 
 | User goal | Prefer |
 |-----------|--------|
-| Install / login / list listeners / expose / account lists | MCP tools per [zeronews-mcp-agent-setup](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md) |
+| Install / login / list listeners / expose / account lists | MCP tools per [zeronews-mcp-setup](https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md) |
 | WorkBuddy connector | `configure_auth` (token), **not** Skills browser login |
 | Reload after config change | Host «Reload MCP» or restart MCP server |
 
@@ -61,5 +61,5 @@ Tunnel create/delete still needs **this machine** logged in and running for loca
 ## References
 
 - npm package: **`zeronews-mcp`**
-- Agent setup: [zeronews-mcp-agent-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md)
+- Agent setup: [zeronews-mcp-setup.md](https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md)
 - Router: [SKILL-ROUTER.md](../_shared/references/SKILL-ROUTER.md)

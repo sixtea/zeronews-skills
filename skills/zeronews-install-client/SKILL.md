@@ -130,7 +130,7 @@ When `zeronews` / `zeronews.exe` is already present and the user did **not** say
 
 For «升到最新版» as the **only** ask, you may use **`zeronews-upgrade-client`** directly; install skill still auto-upgrades when the task is **install**.
 
-**MCP mapping** (only when user/host uses [MCP setup](https://docs.zeronews.cc/raw/ai/zeronews-mcp-agent-setup.md), **not** [skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md)): `install_client` → `configure_auth` (Token). **Skills setup path (F-15):** do **not** use MCP for install/login; use this skill + [BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md).
+**MCP mapping** (only when user/host uses [MCP setup](https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md), **not** [skills-setup](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md)): `install_client` → `configure_auth` (Token). **Skills setup path (F-15):** do **not** use MCP for install/login; use this skill + [BROWSER-LOGIN.md](../_shared/references/BROWSER-LOGIN.md).
 
 ### Step 1c: Not installed yet
 

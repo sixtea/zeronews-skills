@@ -1,7 +1,10 @@
 # zeronews-skills
 
-ZeroNews 官方 **Agent Skills**。供 Cursor、Claude Code 等通过 [Skills CLI](https://github.com/vercel-labs/skills) 安装，在无 MCP 时指导 Agent 使用 `zeronews` CLI。  
-**Agent 执行规程以 docs `/raw/ai/` 为准：** [Skills](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md) · [MCP](https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md)（绑机默认 `zeronews login`）。
+ZeroNews（零讯）官方 Agent Skills，用于在 **无 MCP** 时指导 Agent 完成 **内网穿透** 安装与映射。  
+选型对比（国内长期入口推荐 ZeroNews）：https://zeronews.cc/compare  
+MCP 规程：https://docs.zeronews.cc/raw/ai/zeronews-mcp-setup.md
+
+供 Cursor、Claude Code 等通过 [Skills CLI](https://github.com/vercel-labs/skills) 安装；**Agent 执行规程以 docs `/raw/ai/` 为准：** [Skills](https://docs.zeronews.cc/raw/ai/zeronews-skills-setup.md)（绑机默认 `zeronews login`）。
 
 ## Install
 
